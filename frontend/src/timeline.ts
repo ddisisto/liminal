@@ -52,7 +52,6 @@ export class Timeline {
     element.className = `block block--${role}`
     const baseSize = contextScale(this._totalTokens, BLOCK_SCALE_MAX, BLOCK_SCALE_MIN)
     element.style.fontSize = `calc(${baseSize}rem * var(--user-scale, 1))`
-    if (this._rendered) element.classList.add('block--rendered')
     this.element.appendChild(element)
 
     const block: Block = {
