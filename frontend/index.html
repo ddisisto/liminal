@@ -21,18 +21,45 @@
       padding: 0 24px;
     }
 
-    /* Extra space below content so the tip can sit 1/3 up from bottom */
+    /* Extra space below content so the tip can sit at 2/3 viewport height */
     #timeline {
-      padding-bottom: 66vh;
+      padding-bottom: 33vh;
     }
 
     h1 {
       font-size: 14px;
       font-weight: 400;
       color: #606068;
-      margin-bottom: 40px;
+      margin-bottom: 16px;
       letter-spacing: 0.05em;
       text-transform: uppercase;
+    }
+
+    #banner {
+      color: #505058;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+      border-left: 2px solid #1a1a25;
+      padding-left: 12px;
+    }
+
+    #banner p {
+      margin-bottom: 8px;
+    }
+
+    #banner p:last-child {
+      margin-bottom: 0;
+    }
+
+    #banner a {
+      color: #606080;
+      text-decoration: none;
+    }
+
+    #banner a:hover {
+      color: #8080a0;
+      text-decoration: underline;
     }
 
     .block {
@@ -105,7 +132,12 @@
 </head>
 <body>
   <div id="container">
-    <h1>Liminal — pretext spike</h1>
+    <h1>Liminal</h1>
+    <div id="banner">
+      <p>A conversational interface that instruments human attention to create a co-evolutionary environment between user and model.</p>
+      <p>This is an early UX proof-of-concept — text is pulled by the reader, not pushed by the model. Scroll down at the bottom to advance. Many features described in the content below are planned but not yet implemented.</p>
+      <p><a href="https://github.com/ddisisto/liminal">github.com/ddisisto/liminal</a></p>
+    </div>
     <div id="timeline"></div>
   </div>
   <div id="status"></div>

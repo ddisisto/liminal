@@ -57,8 +57,8 @@ export class Viewport {
   }
 
   /**
-   * Scroll so the last content block sits ~1/3 down from the top of the viewport.
-   * The bottom 2/3 is empty space (via CSS padding-bottom: 66vh on #timeline).
+   * Scroll so the last content block sits ~2/3 down from the top of the viewport.
+   * The bottom 1/3 is empty space (via CSS padding-bottom: 66vh on #timeline).
    * This gives the live edge breathing room and visually separates it from
    * where input will be.
    */
@@ -69,7 +69,7 @@ export class Viewport {
     const blockRect = lastBlock.element.getBoundingClientRect()
     const viewportHeight = window.innerHeight
     // We want the bottom of the last block at 1/3 from viewport top
-    const targetOffsetFromTop = Math.floor(viewportHeight / 3)
+    const targetOffsetFromTop = Math.floor(viewportHeight * 2 / 3)
     const scrollDelta = blockRect.bottom - targetOffsetFromTop
 
     if (scrollDelta > 0) {
@@ -84,7 +84,7 @@ export class Viewport {
     const blockRect = lastBlock.element.getBoundingClientRect()
     const viewportHeight = window.innerHeight
     // "Near tip" = last block's bottom is in the top half of the viewport
-    return blockRect.bottom < viewportHeight * 0.5
+    return blockRect.bottom < viewportHeight * 0.85
   }
 
   private setupScrollListener(): void {

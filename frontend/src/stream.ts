@@ -16,6 +16,8 @@ export interface StreamOptions {
   tokensPerSecond?: number
   /** Called after each token with measurement info. */
   onToken?: (index: number, total: number, lineCount: number, height: number) => void
+  /** When aborted, remaining tokens render instantly (skip animation + pacing). */
+  skipSignal?: AbortSignal
 }
 
 /**
@@ -29,16 +31,31 @@ export async function streamTokens(
   blockIndex: number,
   options: StreamOptions = {},
 ): Promise<void> {
-  const { tokensPerSecond = 40, onToken } = options
+  const { tokensPerSecond = 40, onToken, skipSignal } = options
 
   const cursorEl = createCursor()
   blockElement.appendChild(cursorEl)
 
   let fullText = ''
+  let skipped = false
 
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i]
     fullText += token.text
+
+    // If skip was requested, flush remaining tokens instantly
+    if (!skipped && skipSignal?.aborted) {
+      skipped = true
+      for (let j = i; j < tokens.length; j++) {
+        const t = tokens[j]
+        const span = createTokenSpan(t, j)
+        span.classList.remove('token--entering')
+        blockElement.insertBefore(span, cursorEl)
+      }
+      cursor.setTip(blockIndex, tokens.length - 1)
+      cursor.moveToTip()
+      break
+    }
 
     // Render token
     const span = createTokenSpan(token, i)

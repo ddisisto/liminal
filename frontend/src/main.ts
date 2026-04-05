@@ -53,6 +53,10 @@ async function main() {
     `scroll down at tip to continue`
 
   // Phase 2: JIT pull loop — one scroll-down = one turn streamed
+  // A tip-pull during streaming skips the active animation (renders remaining
+  // tokens instantly) AND triggers the next turn as usual.
+  let skipController: AbortController | null = null
+
   while (nextTurn < turns.length) {
     await waitForTipPull(viewport, cursor)
 
@@ -64,9 +68,16 @@ async function main() {
       cursor.setTip(index, 0)
       cursor.moveToTip()
     } else {
+      // Wire up skip: a tip-pull during streaming aborts the current animation
+      skipController = new AbortController()
+      const unsub = viewport.onTipPull(() => {
+        skipController?.abort()
+      })
+
       // Stream one paragraph — this is the live edge
       await streamTokens(turn.tokens, block.element, cursor, index, {
         tokensPerSecond: 60,
+        skipSignal: skipController.signal,
         onToken: (i, total, lineCount) => {
           statusEl.textContent =
             `streaming turn ${nextTurn + 1}/${turns.length} | ` +
@@ -75,6 +86,9 @@ async function main() {
             `${cursor.atTip ? 'tip' : 'scrollback'}`
         },
       })
+
+      unsub()
+      skipController = null
     }
 
     nextTurn++
