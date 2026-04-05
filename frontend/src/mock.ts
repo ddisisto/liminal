@@ -23,8 +23,9 @@ export interface MockTurn {
 
 /** Transitional prompts interspersed between doc sections. */
 const SECTION_PROMPTS = [
-  'So how does the rendering actually work?',
-  'What makes the pull mechanic different?',
+  'OK so what is this pull thing?',
+  'What\'s happening with the text size?',
+  'How is this built?',
   'Where does this go beyond chat?',
   'What am I actually experiencing right now?',
   'What comes next?',
