@@ -8,7 +8,9 @@ A conversational interface that instruments human attention to create a co-evolu
 
 The demo loads a conversation where text behaves as a temporal medium. Scroll down at the reading edge to pull the next paragraph — generation is driven by the reader, not pushed by the model. Each token streams individually with context-weight font scaling: blocks are born large and shrink as context accumulates around them.
 
-This is a UX proof of concept. The interaction loop is real; the inference backend is mocked. Try it on mobile too — touch scroll and pinch-to-zoom work.
+As you read, the blocks you spend time on develop a warm border — that's live attention tracking via viewport time. It's the first layer of the attention model, running entirely in the browser.
+
+This is a UX proof of concept. The interaction loop is real; the inference backend serves static content (real inference is next). Try it on mobile too — touch scroll and pinch-to-zoom work.
 
 ## The idea
 
@@ -21,20 +23,28 @@ The deeper theory: a language model's priors encode inherited attention-capture 
 ## Built with
 
 - [@chenglou/pretext](https://github.com/chenglou/pretext) — text measurement and per-token rendering
-- TypeScript, Vite, native browser APIs
-- Backend (deferred): Python, FastAPI, SQLite, HuggingFace Transformers
+- TypeScript, Vite, native browser APIs, IntersectionObserver for attention capture
+- Python, FastAPI, SQLite (WAL mode), WebSocket streaming
 
 ## Status
 
-Early proof of concept. The core interaction primitives work: JIT pull, per-token streaming with skip-on-pull, context-weight font scaling, mobile touch, raw/rendered markdown toggle. Backend inference, session persistence, and the upper layers of the model are next.
+L0-1 implemented. The core interaction primitives work: JIT pull, per-token streaming with skip-on-pull, context-weight font scaling, viewport-time attention tracking with live visual feedback, light/dark theme, mobile touch. Backend serves sessions over REST and WebSocket, persists viewport events to SQLite. Frontend falls back to mock data when no backend is running (the live demo runs without one).
+
+Next: real inference (local models via HuggingFace Transformers), then layers 2-3 (annotation, entropy overlays).
 
 We'd love stress testing and critique — open an issue or just play with the demo.
 
 ## Development
 
 ```sh
+# Frontend only (mock data, works standalone)
 npm install
-npx vite        # dev server on port 3000
+npx vite                # dev server on port 3000
+
+# With backend (session persistence, viewport event capture)
+pip install -e ".[dev]"
+uvicorn backend.main:app --reload --port 8000
+npx vite                # in another terminal
 ```
 
 ## License

@@ -94,15 +94,16 @@ This distinction is load-bearing. The user must always know whether they're at t
 
 ## PoC Scope — What We're Deferring
 
-- Backend / real inference (mock token stream from local data)
+- ~~Backend / real inference~~ — **done**: FastAPI + SQLite + WebSocket, demo content seeded, viewport events persisted. Real inference (local model loading) still pending.
 - ~~Markdown rendering~~ — **done**: raw/rendered toggle, minimal renderer, no dependencies
-- Attention capture beyond JIT cadence (selection, copy, dwell instrumentation)
+- ~~Persistence / SQLite~~ — **done**: sessions, sequences, tokens, viewport_events tables. WAL mode.
+- ~~L1 attention capture~~ — **done**: viewport time tracking via IntersectionObserver, AFK gating, live visual feedback (--attention CSS property drives border warmth)
+- Attention capture beyond viewport time (selection, copy instrumentation — L2)
 - Annotation interface (Layer 2)
 - Analytical overlays (Layer 3)
 - Branching / expansion / compression (Layer 4)
 - Navigator and status panel functionality (shells only)
 - ~~Mobile / responsive layout~~ — **done**: touch scroll, pinch-to-zoom font scaling
-- Persistence / SQLite
 
 ---
 

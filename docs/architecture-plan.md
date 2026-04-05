@@ -28,13 +28,15 @@ The system is single-user, local-first, and designed to run on modest hardware (
 
 The backend is the intelligence layer. It handles:
 
-**Inference orchestration** — manages local model loading via HF Transformers, routes to API providers when heavier generation is needed, and handles the switching logic between them. Local inference runs on the 1070, targeting small models that leave headroom for concurrent logprob extraction.
+**Session and sequence management** — session lifecycle, sequence tree traversal, mainline reconstruction from kept/active status chains. Demo content seeding from project docs on startup. Implemented in `backend/sessions.py`.
 
-**Token metadata extraction** — on every generation pass, the backend captures per-token logprobs, computes entropy (over the full vocabulary distribution at each position) and surprisal (negative log probability of the selected token). These are packaged alongside the token text and streamed to the frontend as a single fused payload.
+**Storage** — SQLite with WAL mode, raw SQL (no ORM). CRUD for sessions, sequences, tokens, viewport events. Schema initialised from `schema/init.sql`. Implemented in `backend/storage/database.py`.
 
-**Attention event ingestion** — receives attention events from the frontend (selections, copies, dwell signals) via a REST endpoint or batched WebSocket messages. Writes directly to SQLite with minimal processing. No real-time summarisation — raw storage, analysis deferred.
+**Viewport event ingestion** — receives batched viewport visibility intervals from the frontend via POST `/api/viewport-events`. Writes directly to SQLite. Raw storage, analysis deferred.
 
-**Sequence and branch management** — maintains the VCS-inspired sequence tree. Handles fork creation, sequence resolution (keep/discard), and provides the current linear view for any conversation path.
+**Inference orchestration (future)** — local model loading via HF Transformers, API provider routing, token metadata extraction (logprob, entropy, surprisal). Currently, sessions are seeded with static content; real inference replaces the seeding path.
+
+**User-model (future)** — placeholder for the third predictive system. Initially, this is just the accumulated attention data in SQLite. Later, a lightweight model (embedding-based or classifier) that runs locally and predicts user behaviour from accumulated signal.
 
 **User-model (future)** — placeholder for the third predictive system. Initially, this is just the accumulated attention data in SQLite. Later, a lightweight model (embedding-based or classifier) that runs locally and predicts user behaviour from accumulated signal.
 
@@ -44,7 +46,7 @@ The frontend is the sensing and rendering layer. It stays deliberately thin.
 
 **Conversation renderer** — streams tokens from the WebSocket and renders them as they arrive. Uses Pretext.js for text measurement, enabling precise spatial knowledge of every token's position without DOM reflow. This is the foundation for all overlay and annotation features.
 
-**Attention capture** — instruments native browser events with zero custom UI. Selection events via the Selection API, copy events via the clipboard API, scroll position and dwell time via IntersectionObserver and passive scroll listeners. Events are batched and sent to the backend at a configurable interval — frequent enough to capture signal, infrequent enough to avoid noise.
+**Attention capture (L1)** — viewport time tracking via IntersectionObserver, gated by `visibilitychange`/`blur` for AFK detection. Per-block cumulative viewport time is maintained in-memory and exposed as a `--attention` CSS custom property (0→1), driving live visual warmth on block borders. Completed intervals are batched and POSTed to the backend every 5s. Finer-grained instrumentation (selection events via Selection API, copy events via clipboard API) is a future L2 concern.
 
 **Annotation interface** — on explicit user action (e.g. selecting text and invoking a minimal context menu), allows tagging a token range with a freeform label. This is the Layer 2 interaction — same gesture as passive selection but with intentional commitment. The UI for this should be near-invisible: a small floating input that appears at the selection point, accepts text, and vanishes.
 
@@ -90,26 +92,18 @@ The primary communication channel for generation is a WebSocket connection. Each
 
 The frontend accumulates these into the rendered conversation and the local display model. The backend simultaneously persists each token to SQLite.
 
-Attention events flow in the opposite direction, batched:
+Viewport events flow via REST (POST `/api/viewport-events`), batched every 5s:
 
 ```
 {
   "events": [
     {
-      "sequence_id": "seq_abc123",
-      "start_position": 38,
-      "end_position": 44,
-      "event_type": "selection",
-      "timestamp": "2026-04-05T14:22:01.337Z",
-      "duration_ms": null
-    },
-    {
-      "event_type": "dwell",
-      "sequence_id": "seq_abc123",
-      "start_position": 40,
-      "end_position": 46,
-      "timestamp": "2026-04-05T14:22:03.112Z",
-      "duration_ms": 2400
+      "session_id": "48d06d50-...",
+      "sequence_id": "a1b2c3d4-...",
+      "visible_from": "2026-04-05T14:22:01.337Z",
+      "visible_to": "2026-04-05T14:22:06.500Z",
+      "duration_ms": 5163,
+      "confidence": "active"
     }
   ]
 }
@@ -157,20 +151,21 @@ A session's conversation is a tree of sequences. The mainline path is reconstruc
 
 Positional indexing within each sequence. Unambiguous because sequences are immutable — once written, tokens are never modified.
 
-### attention_events
+### viewport_events
 
 | Column | Type | Notes |
 |--------|------|-------|
 | id | INTEGER PK | Auto-increment |
+| session_id | TEXT | References sessions.id |
 | sequence_id | TEXT | References sequences.id |
-| start_position | INTEGER | Start token index |
-| end_position | INTEGER | End token index (inclusive) |
-| event_type | TEXT | "selection", "copy", "dwell", "scroll_into_view" |
-| timestamp | TIMESTAMP | Client-reported |
-| duration_ms | INTEGER | Nullable. Meaningful for dwell events |
-| metadata | TEXT | JSON blob for extensibility |
+| visible_from | TEXT | ISO 8601 timestamp — entered viewport |
+| visible_to | TEXT | ISO 8601 timestamp — left viewport |
+| duration_ms | INTEGER | Precomputed for convenience |
+| confidence | TEXT | "active", "idle", "uncertain" |
 
-Append-only. No foreign key constraints enforced — this is event log data optimised for write throughput. Bulk reads for analysis.
+Append-only. The core L1 attention signal. Each row records one continuous interval where a block was visible in the viewport. AFK gating via `visibilitychange`/`blur` closes intervals and pauses the clock, so gaps represent genuine absence rather than idle staring. The frontend accumulates per-block viewport time and exposes it as a `--attention` CSS custom property (0→1) for live visual feedback (border colour warmth).
+
+Earlier designs specified per-event-type tracking (selection, copy, dwell, scroll_into_view). The viewport interval model is simpler and more honest for L1 — it captures "was this block in the viewport, and for how long" without imputing intent. Finer-grained event types (selection, copy) belong at L2 when the user is deliberately interacting.
 
 ### annotations
 
@@ -192,7 +187,7 @@ Sparse, high-signal. The user's deliberate marks.
 
 **Generation flow**: User input → backend tokenises and stores as user sequence → inference runs on local model or API → tokens stream over WebSocket with metadata → frontend renders via Pretext.js, backend persists to tokens table → frontend accumulates spatial model of rendered text.
 
-**Attention flow**: User reads and interacts naturally → frontend captures selection, copy, dwell, scroll events via native browser APIs → events batched and sent to backend → backend writes raw events to attention_events table. No processing, no summarisation, no feedback to the model (yet).
+**Attention flow (L1)**: Frontend tracks block viewport visibility via IntersectionObserver, gated by `visibilitychange`/`blur` for AFK detection → completed intervals batched and POSTed to `/api/viewport-events` every 5s → backend writes to viewport_events table. Cumulative viewport time per block is also maintained live in the frontend as a `--attention` CSS custom property (0→1), driving visual warmth on the block border. No processing, no summarisation, no feedback to the model (yet). Finer-grained events (selection, copy) are a future L2 concern.
 
 **Annotation flow**: User deliberately selects and tags → frontend sends annotation to backend → stored in annotations table → annotation optionally rendered as a subtle overlay on the conversation.
 
@@ -228,37 +223,35 @@ Sub-1B models fit comfortably with room for batched logprob extraction. Recommen
 
 ---
 
-## Repository Structure (Suggested)
+## Repository Structure
 
 ```
 liminal/
 ├── backend/
-│   ├── main.py              # FastAPI app, WebSocket endpoint
-│   ├── inference/
-│   │   ├── local.py          # HF Transformers local generation
-│   │   ├── api.py            # API provider clients
-│   │   └── metadata.py       # Logprob, entropy, surprisal extraction
+│   ├── main.py              # FastAPI app, REST + WebSocket endpoints
+│   ├── sessions.py          # Session lifecycle, mainline reconstruction, demo seeding
 │   ├── storage/
-│   │   ├── database.py       # SQLite connection, migrations
-│   │   ├── models.py         # SQLAlchemy or raw SQL schema
-│   │   └── events.py         # Attention event ingestion
-│   ├── sequences/
-│   │   └── manager.py        # Branch creation, resolution, tree traversal
-│   └── config.py             # Model paths, API keys, runtime settings
+│   │   └── database.py      # SQLite connection, schema init, CRUD
+│   └── inference/            # (future) HF Transformers local generation, API providers
 ├── frontend/
-│   ├── index.html
-│   ├── src/
-│   │   ├── main.ts           # Entry point, WebSocket connection
-│   │   ├── renderer.ts       # Token rendering with Pretext.js
-│   │   ├── attention.ts      # Selection, copy, dwell, scroll capture
-│   │   ├── annotations.ts    # Tag UI and management
-│   │   ├── overlays.ts       # Entropy/surprisal visualisation layer
-│   │   └── branches.ts       # Inline expansion UI
-│   └── styles/
-│       └── liminal.css       # Minimal, precise, quiet
+│   ├── index.html            # Styles, theme, layout (CSS custom properties)
+│   └── src/
+│       ├── main.ts           # Entry point, JIT pull loop, render toggle, nav, title animation
+│       ├── session-client.ts # Backend connection with mock fallback
+│       ├── cursor.ts         # Reading position, tip detection, change events
+│       ├── viewport.ts       # Scroll/touch/pinch, tip pull events
+│       ├── viewport-tracker.ts # L1 attention: IntersectionObserver, --attention CSS property
+│       ├── token-renderer.ts # Per-token <span> creation, animation, data attributes
+│       ├── stream.ts         # Token consumer with skip signal
+│       ├── timeline.ts       # Block sequence, context-weight scaling, markdown rendering
+│       ├── input.ts          # Fixed auto-growing textarea
+│       ├── markdown.ts       # Minimal markdown-to-HTML renderer
+│       ├── measurement.ts    # Pretext.js wrapper
+│       ├── types.ts          # TokenData, Block, BlockRole
+│       └── mock.ts           # Static demo content from project docs
 ├── schema/
-│   └── init.sql              # Database initialisation
-├── requirements.txt
+│   └── init.sql              # SQLite schema (sessions, sequences, tokens, viewport_events, annotations)
+├── pyproject.toml
 ├── package.json
 └── README.md
 ```
@@ -267,11 +260,12 @@ liminal/
 
 ## Next Phases
 
-1. **Research survey** — prior art in attention instrumentation, token-level annotation systems, predictive user modelling, adaptive difficulty/temperature control
-2. **Layer 0–1 prototype** — FastAPI + WebSocket + SQLite + basic token renderer with passive attention capture. The "it works and it's already listening" milestone
-3. **Layer 2–3 build** — annotation interface, entropy/surprisal overlay. The "now I can see what the model was thinking" milestone
-4. **Layer 4 exploration** — inline expansion and compression. The "conversation as working document" milestone
-5. **User-model research** — analyse accumulated attention data, design the third predictive system
+1. ~~**Research survey**~~ — done: attention instrumentation, token annotation systems. Predictive user modelling and adaptive difficulty deferred to L5+.
+2. ~~**Layer 0–1 prototype**~~ — done: FastAPI + WebSocket + SQLite, per-token rendering via Pretext.js, JIT pull, viewport-time attention capture with live visual feedback.
+3. **Real inference** — local model loading (HF Transformers), token metadata extraction (logprob, entropy, surprisal), API provider fallback. Replace demo seeding with live generation.
+4. **Layer 2–3 build** — annotation interface, entropy/surprisal overlay. The "now I can see what the model was thinking" milestone.
+5. **Layer 4 exploration** — inline expansion and compression. The "conversation as working document" milestone.
+6. **User-model research** — analyse accumulated attention data, design the third predictive system.
 
 ---
 
