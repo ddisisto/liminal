@@ -112,7 +112,7 @@ export class Timeline {
   get rendered(): boolean {
     return this._rendered
   }
-  private _rendered = false
+  private _rendered = true
 
   /** Cache of token-span DOM per block, so we can toggle back without rebuilding. */
   private rawDomCache = new Map<string, DocumentFragment>()

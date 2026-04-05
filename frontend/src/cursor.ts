@@ -50,6 +50,11 @@ export class Cursor {
     this.emit()
   }
 
+  /** Move cursor to the tip without notifying listeners (no viewport scroll). */
+  syncToTip(): void {
+    this.position = { blockIndex: this.tipBlockIndex, tokenIndex: this.tipTokenIndex }
+  }
+
   /** Advance cursor by one block (scroll-down between blocks). */
   advanceBlock(maxBlockIndex: number): boolean {
     if (this.position.blockIndex < maxBlockIndex) {
