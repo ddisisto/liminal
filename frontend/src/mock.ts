@@ -7,6 +7,7 @@ import type { TokenData } from './types'
 import { mockTokens } from './stream'
 
 // Vite raw imports — loads file content as strings at build time
+import introRaw from '../../docs/intro.md?raw'
 import briefRaw from '../../docs/project-brief.md?raw'
 import archRaw from '../../docs/architecture-plan.md?raw'
 import theoryRaw from '../../docs/theory.md?raw'
@@ -20,26 +21,31 @@ export interface MockTurn {
   text?: string
 }
 
-/** User prompts interspersed between doc sections. */
-const USER_PROMPTS = [
-  'Tell me about the premise of this project.',
-  'What are the design principles?',
-  'Walk me through the layer model.',
-  'What about the interference model?',
-  'Now tell me about the architecture.',
-  'How does the WebSocket protocol work?',
-  'What does the storage schema look like?',
+/** Transitional prompts interspersed between doc sections. */
+const SECTION_PROMPTS = [
+  'So how does the rendering actually work?',
+  'What makes the pull mechanic different?',
+  'Where does this go beyond chat?',
+  'What am I actually experiencing right now?',
+  'What comes next?',
+  'OK, go deeper. What\'s the core premise?',
+  'What are the design principles behind this?',
+  'Walk me through the layers.',
+  'What about when reader and text start influencing each other?',
+  'How is this built?',
+  'How does the streaming protocol work?',
+  'What does the storage layer look like?',
   'And the data flow?',
-  'What are the design constraints?',
-  'Now the theoretical foundations — the oscillator analogy.',
-  'How does game theory apply here?',
-  'What about the user-model as proxy?',
+  'What are the hard constraints?',
+  'Tell me about the oscillator analogy.',
+  'How does game theory fit in?',
+  'What about modelling the reader?',
   'And memetic acceleration?',
-  'What are you honestly uncertain about?',
-  'What does the research say about attention instrumentation?',
-  'What about existing token annotation tools?',
-  'How should we handle streaming overlays?',
-  'What rendering approach do you recommend?',
+  'What are the honest unknowns?',
+  'What does existing research say about attention instrumentation?',
+  'What about token-level annotation tools?',
+  'How should streaming overlays work?',
+  'What rendering approach makes sense?',
 ]
 
 /**
@@ -65,6 +71,7 @@ function docToParagraphs(raw: string): string[] {
  */
 function buildConversation(): MockTurn[] {
   const allParagraphs = [
+    ...docToParagraphs(introRaw),
     ...docToParagraphs(briefRaw),
     ...docToParagraphs(archRaw),
     ...docToParagraphs(theoryRaw),
@@ -77,11 +84,11 @@ function buildConversation(): MockTurn[] {
 
   for (const para of allParagraphs) {
     // Insert a user turn before each heading
-    if (para.startsWith('## ') && promptIndex < USER_PROMPTS.length) {
+    if (para.startsWith('## ') && promptIndex < SECTION_PROMPTS.length) {
       turns.push({
         role: 'user',
         tokens: [],
-        text: USER_PROMPTS[promptIndex++],
+        text: SECTION_PROMPTS[promptIndex++],
       })
     }
 
