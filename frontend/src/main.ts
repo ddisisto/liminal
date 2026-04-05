@@ -74,11 +74,10 @@ async function main() {
     if (e.key === 'End') { e.preventDefault(); jumpToEnd() }
   })
   // Scroll-driven title animation: letter-spacing pulls from wide to tight,
-  // sharpest at midpoint. On desktop, shifts left out of main flow.
+  // sharpest at midpoint. Title stays centred on all screen sizes.
   const titleEl = document.querySelector('h1')!
   const SPACING_START = 1.5   // em — initial wide spread
   const SPACING_END = 0.4     // em — resting tightness
-  const DESKTOP_MIN = 900     // px — threshold for left-shift behaviour
 
   // Ease-in-out: sharpest rate of change at t=0.5
   const easeInOut = (t: number) => t < 0.5
@@ -98,15 +97,6 @@ async function main() {
 
     const spacing = SPACING_START + (SPACING_END - SPACING_START) * eased
     titleEl.style.letterSpacing = `${spacing}em`
-
-    if (window.innerWidth >= DESKTOP_MIN) {
-      // Shift left into margin — max shift roughly half the margin space
-      const maxShift = (window.innerWidth - 700) / 2
-      const shift = -eased * Math.min(maxShift * 0.8, 300)
-      titleEl.style.transform = `translateX(${shift}px)`
-    } else {
-      titleEl.style.transform = ''
-    }
 
     titleTicking = false
   }
