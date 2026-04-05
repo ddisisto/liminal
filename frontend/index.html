@@ -78,7 +78,7 @@
       font-size: calc(1.6rem * var(--user-scale));
       font-weight: 200;
       color: var(--fg-muted);
-      letter-spacing: 0.4em;
+      letter-spacing: 1.5em;
       text-transform: lowercase;
       text-align: center;
       min-height: 300px;
@@ -87,6 +87,7 @@
       justify-content: center;
       margin-bottom: 0;
       position: relative;
+      will-change: letter-spacing, transform;
     }
 
     h1::before,

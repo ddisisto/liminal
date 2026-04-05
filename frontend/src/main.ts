@@ -72,6 +72,54 @@ async function main() {
     if (e.key === 'Home') { e.preventDefault(); jumpToTop() }
     if (e.key === 'End') { e.preventDefault(); jumpToEnd() }
   })
+  // Scroll-driven title animation: letter-spacing pulls from wide to tight,
+  // sharpest at midpoint. On desktop, shifts left out of main flow.
+  const titleEl = document.querySelector('h1')!
+  const SPACING_START = 1.5   // em — initial wide spread
+  const SPACING_END = 0.4     // em — resting tightness
+  const DESKTOP_MIN = 900     // px — threshold for left-shift behaviour
+
+  // Ease-in-out: sharpest rate of change at t=0.5
+  const easeInOut = (t: number) => t < 0.5
+    ? 2 * t * t
+    : 1 - Math.pow(-2 * t + 2, 2) / 2
+
+  let titleTicking = false
+  const updateTitle = () => {
+    const rect = titleEl.getBoundingClientRect()
+    const titleBottom = rect.bottom
+    const titleHeight = rect.height
+
+    // progress 0 = title fully visible, 1 = title exiting viewport top
+    const raw = 1 - (titleBottom / (titleHeight + 80))  // 80 = container margin-top
+    const progress = Math.max(0, Math.min(1, raw))
+    const eased = easeInOut(progress)
+
+    const spacing = SPACING_START + (SPACING_END - SPACING_START) * eased
+    titleEl.style.letterSpacing = `${spacing}em`
+
+    if (window.innerWidth >= DESKTOP_MIN) {
+      // Shift left into margin — max shift roughly half the margin space
+      const maxShift = (window.innerWidth - 700) / 2
+      const shift = -eased * Math.min(maxShift * 0.8, 300)
+      titleEl.style.transform = `translateX(${shift}px)`
+    } else {
+      titleEl.style.transform = ''
+    }
+
+    titleTicking = false
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!titleTicking) {
+      titleTicking = true
+      requestAnimationFrame(updateTitle)
+    }
+  }, { passive: true })
+
+  // Set initial state
+  updateTitle()
+
   const input = new InputArea()
   input.mount(document.body)
 
