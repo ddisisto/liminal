@@ -1,0 +1,17 @@
+{
+  "name": "liminal-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@chenglou/pretext": "^0.0.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.8",
+    "vite": "^6.3"
+  }
+}
