@@ -175,7 +175,7 @@ export class Viewport {
     }
   }
 
-  private emitTipPull(): void {
+  emitTipPull(): void {
     for (const listener of this.tipPullListeners) {
       listener()
     }

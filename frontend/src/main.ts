@@ -47,7 +47,31 @@ async function main() {
     timeline.setRendered(next)
     renderBtn.textContent = next ? 'rendered' : 'raw'
   })
+
   const viewport = new Viewport(document.documentElement, timeline)
+
+  // Navigation: jump to top / jump to end (tip)
+  const navTop = document.getElementById('nav-top')!
+  const navEnd = document.getElementById('nav-end')!
+
+  const jumpToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+  const jumpToEnd = () => {
+    if (cursor.atTip) {
+      viewport.emitTipPull()
+    } else {
+      cursor.moveToTip()
+    }
+  }
+
+  navTop.addEventListener('click', jumpToTop)
+  navEnd.addEventListener('click', jumpToEnd)
+
+  document.addEventListener('keydown', (e) => {
+    // Skip if user is typing in an input/textarea
+    if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) return
+    if (e.key === 'Home') { e.preventDefault(); jumpToTop() }
+    if (e.key === 'End') { e.preventDefault(); jumpToEnd() }
+  })
   const input = new InputArea()
   input.mount(document.body)
 

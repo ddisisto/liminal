@@ -75,13 +75,33 @@
     }
 
     h1 {
-      font-size: calc(2rem * var(--user-scale));
-      font-weight: 400;
+      font-size: calc(1.6rem * var(--user-scale));
+      font-weight: 200;
       color: var(--fg-muted);
-      margin-bottom: 16px;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
+      letter-spacing: 0.4em;
+      text-transform: lowercase;
+      text-align: center;
+      min-height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0;
+      position: relative;
     }
+
+    h1::before,
+    h1::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 1px;
+      background: var(--border-mid);
+    }
+
+    h1::before { top: 35%; }
+    h1::after { bottom: 35%; }
 
     #banner {
       color: var(--fg-faint);
@@ -304,6 +324,33 @@
       margin: 1em 0;
     }
 
+    /* Navigation controls — right edge, thumb-friendly */
+    .nav-btn {
+      position: fixed;
+      right: 16px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--fg-dim);
+      font-size: 14px;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .nav-btn:hover {
+      color: var(--fg-muted);
+      border-color: var(--border-mid);
+    }
+
+    #nav-top { top: 33vh; }
+    #nav-end { top: 66vh; }
+
     #status {
       position: fixed;
       bottom: 16px;
@@ -334,6 +381,8 @@
     <button id="theme-toggle" title="Toggle light/dark theme">dark</button>
     <button id="render-toggle" title="Toggle markdown rendering">rendered</button>
   </div>
+  <button id="nav-top" class="nav-btn" title="Jump to top (Home)">&#x25B2;</button>
+  <button id="nav-end" class="nav-btn" title="Jump to end (End)">&#x25BC;</button>
   <div id="status"></div>
   <script type="module" src="./src/main.ts"></script>
 </body>
