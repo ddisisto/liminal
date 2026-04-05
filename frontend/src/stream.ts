@@ -8,6 +8,7 @@
 
 import type { TokenData } from './types'
 import type { Cursor } from './cursor'
+import type { Timeline } from './timeline'
 import { createTokenSpan, createCursor } from './token-renderer'
 import { measure } from './measurement'
 
@@ -29,6 +30,7 @@ export async function streamTokens(
   blockElement: HTMLElement,
   cursor: Cursor,
   blockIndex: number,
+  timeline: Timeline,
   options: StreamOptions = {},
 ): Promise<void> {
   const { tokensPerSecond = 40, onToken, skipSignal } = options
@@ -51,6 +53,7 @@ export async function streamTokens(
         const span = createTokenSpan(t, j)
         span.classList.remove('token--entering')
         blockElement.insertBefore(span, cursorEl)
+        timeline.pushToken(blockIndex, t)
       }
       cursor.setTip(blockIndex, tokens.length - 1)
       cursor.moveToTip()
@@ -60,6 +63,7 @@ export async function streamTokens(
     // Render token
     const span = createTokenSpan(token, i)
     blockElement.insertBefore(span, cursorEl)
+    timeline.pushToken(blockIndex, token)
 
     // Advance tip and cursor (if following)
     const wasAtTip = cursor.atTip

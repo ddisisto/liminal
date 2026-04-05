@@ -17,7 +17,7 @@ import { streamTokens } from './stream'
 import { MOCK_CONVERSATION, type MockTurn } from './mock'
 
 /** How many turns to render as buffered content on initial load. */
-const INITIAL_BUFFER_TURNS = 10
+const INITIAL_BUFFER_TURNS = 3
 
 async function main() {
   await document.fonts.ready
@@ -67,6 +67,7 @@ async function main() {
       block.element.textContent = turn.text
       cursor.setTip(index, 0)
       cursor.moveToTip()
+
     } else {
       // Wire up skip: a tip-pull during streaming aborts the current animation
       skipController = new AbortController()
@@ -75,7 +76,7 @@ async function main() {
       })
 
       // Stream one paragraph — this is the live edge
-      await streamTokens(turn.tokens, block.element, cursor, index, {
+      await streamTokens(turn.tokens, block.element, cursor, index, timeline, {
         tokensPerSecond: 60,
         skipSignal: skipController.signal,
         onToken: (i, total, lineCount) => {

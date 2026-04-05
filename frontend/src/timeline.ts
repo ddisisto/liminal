@@ -6,14 +6,33 @@
 import type { Block, BlockRole, TokenData } from './types'
 import { createTokenSpan } from './token-renderer'
 
+/** Log-curve scale: max at 0 tokens, approaching min at threshold. */
+export function contextScale(
+  totalTokens: number, max: number, min: number, threshold = 2000,
+): number {
+  if (totalTokens <= 0) return max
+  const t = Math.min(1, Math.log2(1 + totalTokens) / Math.log2(1 + threshold))
+  return max - (max - min) * t
+}
+
+// Block font-size range (rem)
+const BLOCK_SCALE_MAX = 1.3
+const BLOCK_SCALE_MIN = 0.85
+
 let nextId = 0
 
 export class Timeline {
   readonly element: HTMLElement
   private blocks: Block[] = []
+  private _totalTokens = 0
 
   constructor(container: HTMLElement) {
     this.element = container
+  }
+
+  /** Cumulative token count across all blocks. */
+  get totalTokens(): number {
+    return this._totalTokens
   }
 
   /** All blocks in order. */
@@ -30,6 +49,8 @@ export class Timeline {
   addBlock(role: BlockRole): { block: Block; index: number } {
     const element = document.createElement('div')
     element.className = `block block--${role}`
+    element.style.fontSize =
+      contextScale(this._totalTokens, BLOCK_SCALE_MAX, BLOCK_SCALE_MIN) + 'rem'
     this.element.appendChild(element)
 
     const block: Block = {
@@ -53,6 +74,7 @@ export class Timeline {
     const block = this.blocks[blockIndex]
     if (block) {
       block.tokens.push(token)
+      this._totalTokens++
     }
   }
 
@@ -72,11 +94,11 @@ export class Timeline {
       // Assistant turn — per-token spans, no animation class
       for (let i = 0; i < tokens.length; i++) {
         const span = createTokenSpan(tokens[i], i)
-        // Skip animation — remove the entering class immediately
         span.classList.remove('token--entering')
         block.element.appendChild(span)
         block.tokens.push(tokens[i])
       }
+      this._totalTokens += tokens.length
     }
   }
 }
