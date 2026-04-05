@@ -206,7 +206,7 @@ Sparse, high-signal. The user's deliberate marks.
 
 **Raw storage, deferred analysis**: Attention events are stored as-is. Patterns, summaries, and derived signals are computed later — either on-demand or in batch. This avoids premature commitment to what matters before the data reveals it.
 
-**Progressive disclosure at every level**: The schema supports Layers 0–4 without requiring them. A fresh instance with no attention capture enabled is still a functional chat interface. Each layer activates independently.
+**Progressive disclosure at every level**: As described in the [project brief](project-brief.md#progressive-disclosure-as-architecture), each layer is genuinely independent. The schema supports Layers 0–4 without requiring them. A fresh instance with no attention capture enabled is still a functional chat interface.
 
 **No premature optimisation of the user-model**: The third predictive system will emerge from the accumulated attention data. Its architecture depends on what that data reveals. For now, the schema captures the raw material. The model comes later.
 
@@ -266,7 +266,7 @@ liminal/
 1. **Research survey** — prior art in attention instrumentation, token-level annotation systems, predictive user modelling, adaptive difficulty/temperature control
 2. **Layer 0–1 prototype** — FastAPI + WebSocket + SQLite + basic token renderer with passive attention capture. The "it works and it's already listening" milestone
 3. **Layer 2–3 build** — annotation interface, entropy/surprisal overlay. The "now I can see what the model was thinking" milestone
-4. **Layer 4 exploration** — inline expansion and branching. The "conversation as working document" milestone
+4. **Layer 4 exploration** — inline expansion and compression. The "conversation as working document" milestone
 5. **User-model research** — analyse accumulated attention data, design the third predictive system
 
 ---

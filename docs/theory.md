@@ -62,7 +62,7 @@ This asymmetry is not incidental to engagement optimisation — it is *structura
 
 Liminal's core intervention is to reduce this asymmetry on both sides simultaneously:
 
-- **Model → User transparency**: Entropy, surprisal, top-k alternatives, and attention weight visualisations make the model's internal states visible. The user can see not just what the model said but what it considered, how confident it was, and where it was relying on prior patterns versus navigating genuine uncertainty.
+- **Model → User transparency**: Entropy, surprisal, and top-k alternatives make the model's internal states visible. The user can see not just what the model said but what it considered, how confident it was, and where it was relying on prior patterns versus navigating genuine uncertainty. (Deeper signals like attention weights are a future interpretability direction — see the project brief's open questions.)
 
 - **User → Model legibility**: Attention capture, selection events, annotations, and the user-model's predictions make the user's cognitive engagement visible to the system — not as coarse feedback (thumbs up, thumbs down) but as a continuous, granular signal.
 

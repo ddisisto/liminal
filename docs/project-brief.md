@@ -18,7 +18,7 @@ Liminal begins from the observation that this discards most of the signal. The p
 The foundational interaction — selecting text while reading — is already habitual and universal. The system instruments this existing behaviour rather than introducing new ones. There is no onboarding. If you can read, you're already using it.
 
 ### Progressive disclosure as architecture
-Each capability layer is genuinely independent and composes without dependency. A new user sees a clean conversation with subtle affordances. An experienced user sees the same conversation as an instrument panel. No feature gates, no mode switching — just increasing depth available on demand.
+Each capability layer is genuinely independent and composes without dependency. No feature gates, no mode switching — just increasing depth available on demand. A new user sees a clean conversation; an experienced user sees an instrument panel.
 
 ### Minimal and technically competent
 No chrome that isn't earning its place. The tool should feel like a well-made text editor crossed with an oscilloscope — precise, quiet, responsive. Transitions communicate state change, not decoration.
@@ -34,24 +34,22 @@ Taxonomy, classification, and structure are available but never required. The sy
 Standard AI chat. Clean, familiar, fully functional as a standalone experience. The surface upon which everything else is built.
 
 ### Layer 1 — Attention Capture
-Passive instrumentation of natural reading gestures. Selection events, dwell time, copy actions, scroll behaviour. No user action required beyond reading. This layer accumulates signal silently.
+Passive instrumentation of natural reading gestures — selection events, dwell time, copy actions, scroll behaviour. No deliberate interaction required; the system captures signal from gestures the user is already making. This layer accumulates silently.
 
 ### Layer 2 — Selection and Tagging
-Active annotation. The user can mark tokens or spans and optionally classify them. Freeform by default. The gesture is the same as Layer 1 (selection) but with the addition of intentional commitment — a tag, a label, a note. The atomic unit of the cataloguing system.
+Active annotation. The user can mark token spans within a sequence and optionally classify them. Freeform by default. The gesture is the same as Layer 1 (selection) but with the addition of intentional commitment — a tag, a label, a note. The atomic unit of the cataloguing system.
 
 ### Layer 3 — Shared Context View
-Analytical overlays rendered against the conversation. Model-side signals — entropy, surprisal, attention weight trajectories — visualised alongside the text. The user can see where the model was uncertain, confident, or surprised by its own output. Zoom, pan, and append controls for navigating the sequence as a spatial object.
+Analytical overlays rendered against the conversation. Model-side signals — entropy, surprisal, top-k alternative tokens — visualised alongside the text. The user can see where the model was uncertain, confident, or surprised by its own output. Zoom, pan, and append controls for navigating the sequence as a spatial object.
 
 This is where the user's subjective sense of "this mattered" meets the model's statistical reality. Convergence and divergence between the two are both informative.
 
 ### Layer 4 — Semantic Zoom
-Expansion and compression as a unified, bidirectional operation. The user can stop at any point and expand — generating additional detail inline via context injection — or compress, collapsing a block whose detail has lost relevance into a summary or representative token. The conversation becomes a document with variable information density, shaped by what matters *now*.
+Expansion and compression as a unified, bidirectional operation. The user can expand at any point — generating additional detail inline — or compress, collapsing a block into a summary. The conversation becomes a document with variable information density, shaped by what matters *now*.
 
-Expansion creates branches (forking rather than editing, to preserve self-consistency). Compression is non-destructive — the original detail is retained in storage and can be re-expanded at any time. The rendered conversation reflects the user's current resolution of interest, not a fixed transcript.
+Both operations preserve history: expansion forks rather than edits (maintaining sequence immutability), and compression is non-destructive — the original detail is always re-expandable. Attention decay can surface compression candidates where engagement has cooled, but compression is always user-confirmed, never automatic.
 
-**Attention decay**: Over time, blocks that were once heavily attended but have not been revisited can be surfaced as compression candidates — gently, as an affordance, never automatically. The attention signal provides a principled decay curve: preserve detail where attention is recent or intense, offer compression where it has cooled. The conversation breathes — expanding where the user is looking, contracting where they have moved on.
-
-This directly addresses context window management. Rather than truncation or uniform summarisation, the active context sent to the model is shaped by attention-weighted relevance. Compression guided by the user's actual engagement history is fundamentally different from compression guided by recency or token count.
+This directly addresses context window management. Rather than truncation or uniform summarisation, the active context sent to the model is shaped by attention-weighted relevance. See the [architecture document](architecture-plan.md#data-flow-summary) for implementation detail on branch and compression flows.
 
 ### Layer 5 — The User Model
 A third predictive system that builds a model of the user's attention, preferences, and likely responses. This model can:
@@ -115,16 +113,13 @@ These are not yet formalised but are actively informing design decisions:
 - **Training signal pipeline**: How and whether user attention data feeds back into model training is a significant technical and ethical question, deferred intentionally.
 - **Consistency under branching**: Forking preserves consistency but introduces navigational complexity. The right metaphor and interaction model for branch management is unresolved.
 - **User-model architecture**: What form the third predictive system takes — in-context learning, fine-tuned adapter, separate model — is an open research question.
-- **Entropy/surprisal access**: Surfacing model internals (logprobs, attention weights) depends on API-level support and carries its own interpretability challenges.
+- **Entropy/surprisal access**: Surfacing model internals (logprobs, top-k distributions) depends on API-level support. Deeper signals like attention weight trajectories would enable richer Layer 3 overlays and interpretability work, but require access to transformer internals not available through standard inference APIs. Deferred as a future research direction.
 
 ---
 
 ## Next Phases
 
-1. **Architecture detail** — technical stack, component boundaries, data flow
-2. **Repository setup** — project structure, tooling, development environment
-3. **Research survey** — prior art in attention instrumentation, predictive user modelling, adaptive difficulty systems
-4. **Layer 0–2 prototype** — conversation interface with passive attention capture and basic tagging
+See the [architecture document](architecture-plan.md#next-phases) for the current roadmap.
 
 ---
 
