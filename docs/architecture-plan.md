@@ -52,21 +52,25 @@ The frontend is the sensing and rendering layer. It stays deliberately thin.
 
 **Inline expansion and compression (Layer 4)** — at any token position, the user can request additional generation (expansion) or collapse a block to a summary (compression). Expansion opens an inline editing region, the backend generates into a new branch sequence, and the user can keep, modify, or discard before advancing. Compression is non-destructive — the original tokens remain in storage, a compressed representation is generated and displayed, and re-expansion is always available. The renderer needs to handle displaying both branch state and variable-resolution content cleanly — subtle visual cues without disrupting the reading flow.
 
-### Soft Stops and Mid-Generation Intervention
+### JIT Inference and the Pull Primitive
 
-Standard chat uses EOS as the sole turn boundary. Liminal adds a configurable soft stop — by default at `\n\n` (paragraph boundary) — implemented via `stop_tokens` on the inference call. When a soft stop fires, the frontend pauses and gives the user an opportunity to read and optionally intervene before generation continues.
+Generation is driven by a single repeating primitive: the client requests the next token sequence, passing stop conditions (`stop_tokens`, `max_tokens`) directly. The backend streams tokens until a stop condition fires, then waits. The client decides what to do next.
 
-This requires no new architectural primitives. From the model's perspective, a soft stop is just a normal completion that ended. If the user continues without intervening, the backend issues a new inference call with the accumulated context (via prefill where supported). If the user intervenes, their input becomes a standard user turn and the next generation conditions on it naturally. The conversation just has more, shorter turns.
+```
+Client → Backend:  { "sequence_id": "seq_abc123", "stop_tokens": ["\n\n"], "max_tokens": 512 }
+Backend → Client:  [token stream...]
+Backend → Client:  { "type": "stopped", "reason": "stop_token" | "eos" | "max_tokens" }
+```
 
-This works identically for local inference (HF Transformers `stopping_criteria`) and API inference (`stop_tokens` + `prefill`), both of which are standard alongside `logprobs` support.
+By default, `stop_tokens` includes `\n\n` (paragraph boundary), making the model generate one paragraph at a time. The user advances by scrolling to the end or pressing space — the same gesture that signals "I've read this, continue." EOS is not special; it just means the model has nothing more to say, and the frontend shows this differently (e.g. prompting for user input rather than offering a continue affordance).
 
-The schema is unaffected — turns remain bounded by EOS/BOS. A soft stop simply causes the turn boundary to occur sooner than it might have otherwise. The only frontend-specific state is whether an assistant turn ended via soft stop (render continue affordance) or natural EOS (turn complete).
+This is JIT inference: generation is pulled by the reader's pace, not pushed by the model. The user physically cannot advance without their viewport being on the new content. The cadence of pull requests is itself the primary attention signal — paragraph-level dwell with near-perfect reliability, requiring zero additional instrumentation.
 
-Soft stops also serve as natural attention sampling points. The user's behaviour at each pause — immediate continue, dwell, or intervention — is captured as a standard attention event with high signal-to-noise ratio.
+This works identically for local inference (HF Transformers `stopping_criteria`) and API inference (`stop_tokens` + prefill), both standard alongside `logprobs` support. The schema is unaffected — sequences are bounded by EOS/BOS as before; a stop-token simply causes the boundary to occur sooner.
 
 ### WebSocket Protocol
 
-The primary communication channel for generation is a WebSocket connection. Each message from the backend carries:
+The primary communication channel for generation is a WebSocket connection. Each token message from the backend carries:
 
 ```
 {

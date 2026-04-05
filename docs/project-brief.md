@@ -31,10 +31,10 @@ Taxonomy, classification, and structure are available but never required. The sy
 ## Layer Model
 
 ### Layer 0 — Conversation
-Standard AI chat. Clean, familiar, fully functional as a standalone experience. The surface upon which everything else is built.
+AI chat with JIT inference: generation is pulled by the reader one paragraph at a time, not pushed as a wall of text. Clean, familiar, fully functional as a standalone experience. The surface upon which everything else is built — and already, by its pull cadence, an attention instrument.
 
 ### Layer 1 — Attention Capture
-Passive instrumentation of natural reading gestures — selection events, dwell time, copy actions, scroll behaviour. No deliberate interaction required; the system captures signal from gestures the user is already making. This layer accumulates silently.
+The foundational signal is the JIT inference cadence itself — the interval between each paragraph arriving and the user requesting the next. Additional passive instrumentation captures finer-grained reading gestures: selection events, copy actions, scroll-back, dwell time. No deliberate interaction required; the system captures signal from gestures the user is already making.
 
 ### Layer 2 — Selection and Tagging
 Active annotation. The user can mark token spans within a sequence and optionally classify them. Freeform by default. The gesture is the same as Layer 1 (selection) but with the addition of intentional commitment — a tag, a label, a note. The atomic unit of the cataloguing system.

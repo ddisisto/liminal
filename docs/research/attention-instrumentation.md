@@ -146,9 +146,9 @@ During active generation, new tokens are being appended to the DOM while the use
 
 This is not addressed in any of the prior art surveyed -- it is specific to streaming chat interfaces. [TK]
 
-### Soft Stops as Natural Sampling Points
+### JIT Inference Cadence as Primary Attention Signal
 
-The architecture doc's soft-stop mechanism (pausing generation at paragraph boundaries) creates natural attention-measurement windows. User behavior at these pause points -- immediate continue, dwell, intervention -- is high-signal because the context is controlled: the user has just finished reading a complete unit of text. This is analogous to how reading researchers use page-turn latency as a signal. [TK]
+The architecture's JIT inference model (generation pulled by the user one paragraph at a time via stop conditions) means the core interaction loop *is* the primary attention instrument. The interval between token stream completion and the user's next pull request is a direct, high-reliability measure of paragraph-level dwell — analogous to how reading researchers use page-turn latency as a signal. This requires no additional instrumentation; it falls out of the generation protocol itself. All other attention signals (selection, copy, scroll-back) are enrichment layers on top of this foundation. [TK, updated based on architecture revision]
 
 ### Privacy Model is Simpler Than Commercial Tools
 
@@ -156,14 +156,14 @@ Because Liminal is single-user and local-first, most of the GDPR/consent machine
 
 ### What to Prioritize for Implementation
 
-Based on this survey, in order of signal reliability and implementation effort:
+Revised priority based on the JIT inference model (see architecture doc). The key insight: if generation is pulled by the user one paragraph at a time, the pull cadence itself is the highest-signal attention data — paragraph-level dwell with near-perfect reliability and zero instrumentation overhead.
 
-1. **Copy events** -- Highest signal, trivial to implement. Just listen for `copy` on the document, resolve selection to token range.
-2. **Selection events** -- High signal, slightly more complex due to debouncing and `selectionchange` noise. Capture only settled selections (300ms debounce after last `selectionchange`).
-3. **Dwell time via IntersectionObserver** -- Moderate signal, low implementation cost. Observe message/paragraph blocks. Combine with visibility ratio for weighted dwell.
+1. **JIT inference cadence** -- The interval between the end of a token stream and the user's next pull request is a direct measure of paragraph-level dwell. If the user pulls faster than plausible reading speed, that's a skim/search signal. If they dwell, that's engagement. This comes for free from the core interaction loop — no additional capture code needed.
+2. **Copy events** -- Highest explicit signal, trivial to implement. Just listen for `copy` on the document, resolve selection to token range.
+3. **Selection events** -- High signal, slightly more complex due to debouncing and `selectionchange` noise. Capture only settled selections (300ms debounce after last `selectionchange`).
 4. **Scroll-back detection** -- Moderate signal, moderate complexity. Track scroll direction relative to content already marked as "seen." Scrolling up into previously viewed content is a re-reading signal.
-5. **Scroll velocity** -- Low-moderate signal, useful for distinguishing skimming from reading. Derive from scroll event timestamps and positions.
-6. **Soft-stop behavior** -- High signal, but depends on the soft-stop feature being implemented first.
+5. **Dwell time via IntersectionObserver** -- Enrichment layer on top of the JIT cadence signal. Useful for measuring attention on *previous* paragraphs while the user is reading current content.
+6. **Scroll velocity** -- Low-moderate signal, useful for distinguishing skimming from reading. Derive from scroll event timestamps and positions.
 
 Mouse position tracking is not recommended as a primary signal for this use case.
 
