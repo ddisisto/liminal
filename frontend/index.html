@@ -21,9 +21,10 @@
       padding: 0 24px;
     }
 
-    /* Extra space below content so the tip can sit at 2/3 viewport height */
+    /* Extra space below content so the tip can sit at 2/3 viewport height,
+       plus room for the fixed input area */
     #timeline {
-      padding-bottom: 33vh;
+      padding-bottom: calc(33vh + 60px);
     }
 
     h1 {
@@ -118,6 +119,42 @@
 
     .chunk-boundary--loading::before {
       content: '— loading —';
+    }
+
+    #input-area {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 24px 16px;
+      background: linear-gradient(transparent, #0a0a0f 12px);
+      display: flex;
+      justify-content: center;
+    }
+
+    #input-area textarea {
+      width: 100%;
+      max-width: 700px;
+      background: #101018;
+      color: #c8c8d0;
+      border: 1px solid #1a1a25;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 1rem;
+      line-height: 1.5;
+      resize: none;
+      overflow-y: hidden;
+      outline: none;
+      transition: border-color 0.15s ease-out, font-size 0.15s ease-out;
+    }
+
+    #input-area textarea:focus {
+      border-color: #2a2a45;
+    }
+
+    #input-area textarea::placeholder {
+      color: #303038;
     }
 
     #status {

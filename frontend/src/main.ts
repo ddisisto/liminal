@@ -13,6 +13,7 @@
 import { Cursor } from './cursor'
 import { Timeline } from './timeline'
 import { Viewport } from './viewport'
+import { InputArea } from './input'
 import { streamTokens } from './stream'
 import { MOCK_CONVERSATION, type MockTurn } from './mock'
 
@@ -28,6 +29,15 @@ async function main() {
   const cursor = new Cursor()
   const timeline = new Timeline(timelineEl)
   const viewport = new Viewport(document.documentElement, timeline)
+  const input = new InputArea()
+  input.mount(document.body)
+
+  input.onSubmitHandler((text) => {
+    const { block, index } = timeline.addBlock('user')
+    block.element.textContent = text
+    cursor.setTip(index, 0)
+    cursor.moveToTip()
+  })
 
   cursor.onChange((pos, atTip) => {
     viewport.onCursorMove(pos, atTip)
