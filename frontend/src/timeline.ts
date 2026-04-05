@@ -120,6 +120,14 @@ export class Timeline {
   /** Toggle all blocks between raw token spans and rendered markdown. */
   setRendered(rendered: boolean): void {
     if (rendered === this._rendered) return
+
+    // Anchor the block nearest viewport center so the toggle doesn't jump
+    const anchor = this.findCenterBlock()
+    let offsetBefore = 0
+    if (anchor) {
+      offsetBefore = anchor.element.getBoundingClientRect().top
+    }
+
     this._rendered = rendered
 
     for (const block of this.blocks) {
@@ -129,6 +137,28 @@ export class Timeline {
         this.restoreBlock(block)
       }
     }
+
+    if (anchor) {
+      const offsetAfter = anchor.element.getBoundingClientRect().top
+      window.scrollBy(0, offsetAfter - offsetBefore)
+    }
+  }
+
+  /** Find the block whose center is closest to the viewport center. */
+  private findCenterBlock(): Block | undefined {
+    const viewCenter = window.innerHeight / 2
+    let best: Block | undefined
+    let bestDist = Infinity
+    for (const block of this.blocks) {
+      const rect = block.element.getBoundingClientRect()
+      const blockCenter = rect.top + rect.height / 2
+      const dist = Math.abs(blockCenter - viewCenter)
+      if (dist < bestDist) {
+        bestDist = dist
+        best = block
+      }
+    }
+    return best
   }
 
   /**
