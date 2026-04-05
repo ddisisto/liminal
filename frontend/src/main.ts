@@ -15,7 +15,8 @@ import { Timeline } from './timeline'
 import { Viewport } from './viewport'
 import { InputArea } from './input'
 import { streamTokens } from './stream'
-import { MOCK_CONVERSATION, type MockTurn } from './mock'
+import { connect } from './session-client'
+import { ViewportTracker } from './viewport-tracker'
 
 /** How many turns to render as buffered content on initial load. */
 const INITIAL_BUFFER_TURNS = 3
@@ -56,10 +57,9 @@ async function main() {
 
   const jumpToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
   const jumpToEnd = () => {
+    cursor.moveToTip()
     if (cursor.atTip) {
       viewport.emitTipPull()
-    } else {
-      cursor.moveToTip()
     }
   }
 
@@ -127,6 +127,7 @@ async function main() {
     const { block, index } = timeline.addBlock('user')
     block.element.textContent = text
     block.rawText = text
+    tracker.track(block.element, block.id)
     cursor.setTip(index, 0)
     cursor.moveToTip()
   })
@@ -135,16 +136,19 @@ async function main() {
     viewport.onCursorMove(pos, atTip)
   })
 
-  const turns = MOCK_CONVERSATION
+  const session = await connect()
+  const tracker = new ViewportTracker(session)
+  const turns = session.turns
   let nextTurn = 0
 
   // Phase 1: Render initial buffer instantly
   const bufferEnd = Math.min(INITIAL_BUFFER_TURNS, turns.length)
   for (let i = 0; i < bufferEnd; i++) {
     const turn = turns[i]
-    const { index } = timeline.addBlock(turn.role)
+    const { block, index } = timeline.addBlock(turn.role)
     timeline.renderBuffered(index, turn.tokens, turn.text)
     timeline.renderIfActive(index)
+    tracker.track(block.element, turn.sequenceId ?? block.id)
     cursor.setTip(index, Math.max(0, turn.tokens.length - 1))
     nextTurn++
   }
@@ -165,6 +169,7 @@ async function main() {
 
     const turn = turns[nextTurn]
     const { block, index } = timeline.addBlock(turn.role)
+    tracker.track(block.element, turn.sequenceId ?? block.id)
 
     if (turn.role === 'user' && turn.text) {
       block.element.textContent = turn.text

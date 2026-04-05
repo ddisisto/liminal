@@ -29,6 +29,7 @@
       --fg-em: #b0b0b8;
       --fg-heading: #909098;
       --border-focus: #2a2a45;
+      --border-attn: #6a5030;   /* warm amber — attention target */
     }
 
     [data-theme="light"] {
@@ -50,6 +51,7 @@
       --fg-em: #3a3a42;
       --fg-heading: #4a4a52;
       --border-focus: #a0a0b8;
+      --border-attn: #c09050;   /* warm amber for light theme */
     }
 
     body {
@@ -134,15 +136,24 @@
     .block {
       margin-bottom: 16px;
       padding: 8px 0;
+      --attention: 0;
     }
 
     .block--assistant {
-      border-left: 2px solid var(--border-mid);
+      border-left: 2px solid color-mix(
+        in oklch,
+        var(--border-mid),
+        var(--border-attn) calc(var(--attention) * 100%)
+      );
       padding-left: 12px;
     }
 
     .block--user {
-      border-left: 2px solid var(--border-user);
+      border-left: 2px solid color-mix(
+        in oklch,
+        var(--border-user),
+        var(--border-attn) calc(var(--attention) * 100%)
+      );
       padding-left: 12px;
       color: var(--fg-user);
     }
