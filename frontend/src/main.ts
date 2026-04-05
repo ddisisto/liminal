@@ -58,6 +58,7 @@ async function main() {
   const jumpToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
   const jumpToEnd = () => {
     cursor.moveToTip()
+    viewport.returnToTip()
     if (cursor.atTip) {
       viewport.emitTipPull()
     }
