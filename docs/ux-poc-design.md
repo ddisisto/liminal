@@ -51,13 +51,16 @@ Three-column, fixed-width (~2000px initial target):
 
 One repeating primitive: client requests next token sequence with stop conditions, backend streams tokens, client decides what to do next.
 
-**Continue gesture**: scroll-down (at tip only). Covers mouse wheel, trackpad, touch scroll, arrow keys, PgDn — anything that moves the viewport down. No keyboard shortcuts for now; expand later.
+**The cursor**: The user's position in the token stream — the central state object. Not a decorative blinking line but the single source of truth for viewport position, tip detection, attention signal, and JIT triggering. Closer to `less` than to a web page.
 
-**Tip detection**: IntersectionObserver on a sentinel element at the end of the conversation. Binary state: either the sentinel is visible (at tip) or not (in scrollback). This state is the single source of truth for whether scroll-down means "continue" or "navigate."
+- Scroll events move the **cursor**, and the viewport follows the cursor
+- During streaming, the cursor auto-advances with new tokens (unless the user has scrolled back)
+- **Tip detection** is trivial: `cursor.position === stream.length`
+- **At tip, scroll-down** = cursor has nowhere to go = triggers next inference pull
+- **In scrollback, scroll-down** = cursor advances through existing content = normal navigation
+- **Attention signal**: cursor position over time IS the reading trace — no separate dwell instrumentation needed for the basic signal
 
-**At tip**: scroll-down triggers next inference pull. The input area is active for user turns.
-
-**In scrollback**: scroll-down is normal navigation. A visible affordance ("↓ return to live edge" or similar) appears. Input area shows "viewing history" or is visually muted.
+**Continue gesture**: scroll-down (at tip only). Covers mouse wheel, trackpad, touch scroll, arrow keys, PgDn. No keyboard shortcuts for now; expand later.
 
 ---
 
@@ -84,8 +87,8 @@ This distinction is load-bearing. The user must always know whether they're at t
 
 1. **Per-token rendering works** — Pretext.js layout, individual `<span>` per token, data attributes plumbed
 2. **Streaming feels right** — token arrival animation, paragraph-at-a-time pacing
-3. **JIT pull interaction works** — scroll-down at tip triggers next chunk, scrollback is normal navigation
-4. **Tip detection is reliable** — IntersectionObserver sentinel, consistent binary state
+3. **Cursor model works** — cursor as reading position, viewport follows cursor, tip detection from cursor state
+4. **JIT pull interaction works** — scroll-down at tip triggers next chunk, scrollback is normal navigation
 
 ## PoC Scope — What We're Deferring
 
@@ -100,6 +103,25 @@ This distinction is load-bearing. The user must always know whether they're at t
 - Persistence / SQLite
 
 ---
+
+## Module Architecture
+
+```
+frontend/src/
+├── main.ts              # Wires modules together, page layout, input area, JIT loop
+├── cursor.ts            # Reading position in token stream, movement, tip query, events
+├── viewport.ts          # Follows cursor, DOM scrolling, visual tip/scrollback state
+├── token-renderer.ts    # Creates per-token <span>, animation, data attributes
+├── stream.ts            # Token consumer (mock timer now, WebSocket later), advances cursor
+├── timeline.ts          # Block sequence, turn data model, conversation structure
+├── measurement.ts       # Pretext.js wrapper — font, layout, resize, cache
+├── types.ts             # TokenData, BlockRole, shared interfaces
+└── mock.ts              # Pre-tokenized text with fake metadata
+```
+
+**Key boundary**: `stream.ts` and `timeline.ts` don't know about each other. `main.ts` connects them — "when a stream finishes and cursor is at tip, wait for scroll-down, then start the next stream." That's the JIT loop.
+
+**The cursor is the central state object.** Timeline, stream, and viewport all reference cursor position. Tip detection, attention capture, and viewport management are all cursor position queries — not separate systems.
 
 ## Technical Approach
 

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liminal — Pretext Spike</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0f;
+      color: #c8c8d0;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    #container {
+      max-width: 700px;
+      margin: 80px auto;
+      padding: 0 24px;
+    }
+
+    h1 {
+      font-size: 14px;
+      font-weight: 400;
+      color: #606068;
+      margin-bottom: 40px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .block {
+      margin-bottom: 16px;
+      padding: 8px 0;
+    }
+
+    .block--assistant {
+      border-left: 2px solid #2a2a35;
+      padding-left: 12px;
+    }
+
+    .block--user {
+      border-left: 2px solid #3a5a3a;
+      padding-left: 12px;
+      color: #a0c0a0;
+    }
+
+    .token {
+      display: inline;
+      transition: opacity 150ms ease-out;
+    }
+
+    .token--entering {
+      opacity: 0;
+    }
+
+    /* Subtle cursor at the end of streaming */
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: #606068;
+      margin-left: 1px;
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    #status {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      font-size: 11px;
+      color: #404048;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>Liminal — pretext spike</h1>
+    <div id="timeline"></div>
+  </div>
+  <div id="status"></div>
+  <script type="module" src="./src/spike.ts"></script>
+</body>
+</html>
