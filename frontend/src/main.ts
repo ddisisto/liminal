@@ -64,7 +64,6 @@ async function main() {
     cursor.setTip(index, Math.max(0, turn.tokens.length - 1))
     nextTurn++
   }
-  cursor.moveToTip()
 
   statusEl.textContent =
     `${bufferEnd} turns buffered | ` +
