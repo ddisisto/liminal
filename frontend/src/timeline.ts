@@ -49,8 +49,8 @@ export class Timeline {
   addBlock(role: BlockRole): { block: Block; index: number } {
     const element = document.createElement('div')
     element.className = `block block--${role}`
-    element.style.fontSize =
-      contextScale(this._totalTokens, BLOCK_SCALE_MAX, BLOCK_SCALE_MIN) + 'rem'
+    const baseSize = contextScale(this._totalTokens, BLOCK_SCALE_MAX, BLOCK_SCALE_MIN)
+    element.style.fontSize = `calc(${baseSize}rem * var(--user-scale, 1))`
     this.element.appendChild(element)
 
     const block: Block = {

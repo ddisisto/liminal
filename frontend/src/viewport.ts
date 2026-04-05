@@ -15,6 +15,10 @@ export class Viewport {
   private _atTip = true
   private tipPullListeners: TipPullListener[] = []
   private ticking = false
+  private touchStartY = 0
+  private pinchStartDist = 0
+  private pinchBaseScale = 1
+  private _userScale = 1
 
   constructor(scrollContainer: HTMLElement, timeline: Timeline) {
     this.scrollContainer = scrollContainer
@@ -99,6 +103,42 @@ export class Viewport {
       })
     }, { passive: true })
 
+    // Touch events for mobile — scroll direction + pinch-to-scale
+    this.scrollContainer.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        this.touchStartY = e.touches[0].clientY
+      } else if (e.touches.length === 2) {
+        this.pinchStartDist = this.touchDist(e.touches)
+        this.pinchBaseScale = this._userScale
+      }
+    }, { passive: true })
+
+    // Pinch move — must be non-passive to preventDefault (block native zoom)
+    this.scrollContainer.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault()
+        const dist = this.touchDist(e.touches)
+        const ratio = dist / this.pinchStartDist
+        this.setUserScale(this.pinchBaseScale * ratio)
+      }
+    }, { passive: false })
+
+    this.scrollContainer.addEventListener('touchend', (e) => {
+      if (e.touches.length === 0 && this.pinchStartDist === 0) {
+        // Single-finger end — handle scroll direction
+        const deltaY = this.touchStartY - (e.changedTouches[0]?.clientY ?? this.touchStartY)
+        if (Math.abs(deltaY) > 10) {
+          requestAnimationFrame(() => {
+            this.handleWheel(deltaY)
+          })
+        }
+      }
+      // Reset pinch state when all fingers lift
+      if (e.touches.length === 0) {
+        this.pinchStartDist = 0
+      }
+    }, { passive: true })
+
     // Also handle keyboard navigation
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowDown' || e.key === 'PageDown') {
@@ -139,6 +179,25 @@ export class Viewport {
     for (const listener of this.tipPullListeners) {
       listener()
     }
+  }
+
+  /** Current user font-scale multiplier (1.0 = default). */
+  get userScale(): number {
+    return this._userScale
+  }
+
+  private touchDist(touches: TouchList): number {
+    const dx = touches[0].clientX - touches[1].clientX
+    const dy = touches[0].clientY - touches[1].clientY
+    return Math.sqrt(dx * dx + dy * dy)
+  }
+
+  private setUserScale(scale: number): void {
+    // Clamp to reasonable range
+    this._userScale = Math.max(0.5, Math.min(2.5, scale))
+    document.documentElement.style.setProperty(
+      '--user-scale', String(this._userScale),
+    )
   }
 
   private updateVisualState(atTip: boolean): void {
