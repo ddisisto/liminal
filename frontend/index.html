@@ -138,6 +138,13 @@
       padding: 8px 0;
       white-space: pre-wrap;
       --attention: 0;
+      transition: opacity 150ms ease, border-left-width 150ms ease, padding-left 150ms ease;
+    }
+
+    .block:hover {
+      opacity: 1 !important;
+      border-left-width: 4px;
+      padding-left: 10px;
     }
 
     .block--rendered {
