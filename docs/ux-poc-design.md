@@ -83,23 +83,25 @@ This distinction is load-bearing. The user must always know whether they're at t
 
 ---
 
-## PoC Scope — What We're Proving
+## PoC Scope — What We've Proven
 
-1. **Per-token rendering works** — Pretext.js layout, individual `<span>` per token, data attributes plumbed
-2. **Streaming feels right** — token arrival animation, paragraph-at-a-time pacing
-3. **Cursor model works** — cursor as reading position, viewport follows cursor, tip detection from cursor state
-4. **JIT pull interaction works** — scroll-down at tip triggers next chunk, scrollback is normal navigation
+1. **Per-token rendering works** — individual `<span>` per token, data attributes plumbed, context-weight font scaling
+2. **Streaming feels right** — token arrival animation, paragraph-at-a-time pacing, skip-on-pull for impatient readers
+3. **Cursor model works** — cursor as reading position, viewport follows cursor at 2/3 height, tip detection from cursor state
+4. **JIT pull interaction works** — scroll-down at tip triggers next chunk, scrollback is normal navigation, works on desktop + mobile
+5. **Raw/rendered toggle works** — markdown rendering as a view lens over immutable token data, instant toggle with DOM caching
+6. **Mobile works** — touch scroll triggers pull, pinch-to-zoom controls font scale via CSS variable (future L1 signal)
 
 ## PoC Scope — What We're Deferring
 
 - Backend / real inference (mock token stream from local data)
-- Markdown rendering (raw tokens — `*italics*` renders as `*italics*`)
+- ~~Markdown rendering~~ — **done**: raw/rendered toggle, minimal renderer, no dependencies
 - Attention capture beyond JIT cadence (selection, copy, dwell instrumentation)
 - Annotation interface (Layer 2)
 - Analytical overlays (Layer 3)
 - Branching / expansion / compression (Layer 4)
 - Navigator and status panel functionality (shells only)
-- Mobile / responsive layout
+- ~~Mobile / responsive layout~~ — **done**: touch scroll, pinch-to-zoom font scaling
 - Persistence / SQLite
 
 ---

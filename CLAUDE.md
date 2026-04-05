@@ -4,7 +4,7 @@ A conversational interface that instruments human attention to create a co-evolu
 
 ## Project State
 
-UX proof-of-concept working. Streaming per-token rendering with Pretext.js, JIT pull interaction (scroll-down at tip = next paragraph), buffered vs streaming content delivery. Module architecture extracted and stable. Backend deferred.
+UX proof-of-concept live at ddisisto.github.io/liminal/. Core interaction loop working: JIT pull (scroll-down at tip = next paragraph), per-token streaming with skip-on-pull, context-weight font scaling (blocks born large, shrink as context accumulates), mobile touch/pinch-to-zoom, fixed auto-growing input area, raw/rendered markdown toggle. GitHub Pages auto-deploys from main. Module architecture extracted and stable. Backend deferred.
 
 ## Key Concepts
 
@@ -26,12 +26,14 @@ UX proof-of-concept working. Streaming per-token rendering with Pretext.js, JIT 
 
 ```
 frontend/src/
-├── main.ts              # Wires modules, JIT pull loop, buffered initial load
+├── main.ts              # Wires modules, JIT pull loop, buffered initial load, render toggle
 ├── cursor.ts            # Reading position, movement, tip detection, change events
-├── viewport.ts          # Follows cursor, scroll detection, tip pull events
+├── viewport.ts          # Follows cursor, scroll/touch/pinch detection, tip pull events
 ├── token-renderer.ts    # Per-token <span> creation, animation, data attributes
-├── stream.ts            # Live token consumer (mock timer → WebSocket later)
-├── timeline.ts          # Block sequence, buffered rendering, DOM management
+├── stream.ts            # Live token consumer with skip signal (mock timer → WebSocket later)
+├── timeline.ts          # Block sequence, context-weight scaling, buffered/rendered modes
+├── input.ts             # Fixed auto-growing textarea, font scaling, submit handling
+├── markdown.ts          # Minimal markdown-to-HTML renderer (no dependencies)
 ├── measurement.ts       # Pretext.js wrapper — font, layout, resize
 ├── types.ts             # TokenData, Block, BlockRole
 ├── mock.ts              # Loads project docs as mock conversation via Vite raw imports
@@ -56,8 +58,8 @@ frontend/src/
 
 ## Current Priorities
 
-1. Continue iterating UX PoC: scrollback visual state, input area, sidebar shells
-2. Backend is deferred — known-solvable, lower risk
+1. Backend: inference, session persistence, real user interaction
+2. Scrollback visual state (ambient dimming, temporal distance indicators)
 3. Research survey topics 3 & 4 (predictive user modelling, adaptive difficulty) deferred until L5+
 
 ## Dev Environment

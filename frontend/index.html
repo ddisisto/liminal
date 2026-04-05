@@ -162,6 +162,101 @@
       color: #303038;
     }
 
+    /* Render mode toggle */
+    #render-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: 1px solid #1a1a25;
+      border-radius: 4px;
+      color: #404048;
+      font-family: monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: color 0.15s, border-color 0.15s;
+      z-index: 10;
+    }
+
+    #render-toggle:hover {
+      color: #606068;
+      border-color: #2a2a35;
+    }
+
+    /* Rendered markdown within blocks */
+    .block--rendered h1, .block--rendered h2, .block--rendered h3,
+    .block--rendered h4, .block--rendered h5, .block--rendered h6 {
+      color: #909098;
+      font-weight: 500;
+      margin: 0.8em 0 0.4em;
+    }
+
+    .block--rendered h1 { font-size: 1.3em; }
+    .block--rendered h2 { font-size: 1.15em; }
+    .block--rendered h3 { font-size: 1.05em; }
+
+    .block--rendered p {
+      margin: 0.5em 0;
+    }
+
+    .block--rendered strong {
+      color: #d0d0d8;
+      font-weight: 600;
+    }
+
+    .block--rendered em {
+      color: #b0b0b8;
+      font-style: italic;
+    }
+
+    .block--rendered code {
+      background: #12121a;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+
+    .block--rendered pre {
+      background: #12121a;
+      padding: 12px 14px;
+      border-radius: 4px;
+      margin: 0.6em 0;
+      overflow-x: auto;
+    }
+
+    .block--rendered pre code {
+      background: none;
+      padding: 0;
+    }
+
+    .block--rendered ul, .block--rendered ol {
+      padding-left: 1.5em;
+      margin: 0.4em 0;
+    }
+
+    .block--rendered li {
+      margin: 0.2em 0;
+    }
+
+    .block--rendered a {
+      color: #606080;
+      text-decoration: none;
+    }
+
+    .block--rendered a:hover {
+      color: #8080a0;
+      text-decoration: underline;
+    }
+
+    .block--rendered hr {
+      border: none;
+      border-top: 1px solid #1a1a25;
+      margin: 1em 0;
+    }
+
     #status {
       position: fixed;
       bottom: 16px;
@@ -182,6 +277,7 @@
     </div>
     <div id="timeline"></div>
   </div>
+  <button id="render-toggle" title="Toggle markdown rendering">raw</button>
   <div id="status"></div>
   <script type="module" src="./src/main.ts"></script>
 </body>

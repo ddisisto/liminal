@@ -25,9 +25,16 @@ async function main() {
 
   const timelineEl = document.getElementById('timeline')!
   const statusEl = document.getElementById('status')!
+  const toggleBtn = document.getElementById('render-toggle')!
 
   const cursor = new Cursor()
   const timeline = new Timeline(timelineEl)
+
+  toggleBtn.addEventListener('click', () => {
+    const next = !timeline.rendered
+    timeline.setRendered(next)
+    toggleBtn.textContent = next ? 'rendered' : 'raw'
+  })
   const viewport = new Viewport(document.documentElement, timeline)
   const input = new InputArea()
   input.mount(document.body)
@@ -35,6 +42,7 @@ async function main() {
   input.onSubmitHandler((text) => {
     const { block, index } = timeline.addBlock('user')
     block.element.textContent = text
+    block.rawText = text
     cursor.setTip(index, 0)
     cursor.moveToTip()
   })
@@ -52,6 +60,7 @@ async function main() {
     const turn = turns[i]
     const { index } = timeline.addBlock(turn.role)
     timeline.renderBuffered(index, turn.tokens, turn.text)
+    timeline.renderIfActive(index)
     cursor.setTip(index, Math.max(0, turn.tokens.length - 1))
     nextTurn++
   }
@@ -75,6 +84,8 @@ async function main() {
 
     if (turn.role === 'user' && turn.text) {
       block.element.textContent = turn.text
+      block.rawText = turn.text
+      timeline.renderIfActive(index)
       cursor.setTip(index, 0)
       cursor.moveToTip()
 
@@ -100,6 +111,7 @@ async function main() {
 
       unsub()
       skipController = null
+      timeline.renderIfActive(index)
     }
 
     nextTurn++

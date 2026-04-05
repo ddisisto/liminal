@@ -15,4 +15,6 @@ export interface Block {
   role: BlockRole
   tokens: TokenData[]
   element: HTMLElement
+  /** Raw text content for markdown rendering. Built from tokens or user input. */
+  rawText: string
 }
