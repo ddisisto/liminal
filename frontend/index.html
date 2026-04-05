@@ -9,14 +9,56 @@
 
     :root {
       --user-scale: 1;
+
+      /* Dark theme (default) */
+      --bg: #0a0a0f;
+      --fg: #c8c8d0;
+      --fg-muted: #606068;
+      --fg-faint: #505058;
+      --fg-dim: #404048;
+      --fg-ghost: #303038;
+      --accent: #606080;
+      --accent-hover: #8080a0;
+      --border: #1a1a25;
+      --border-mid: #2a2a35;
+      --border-user: #3a5a3a;
+      --fg-user: #a0c0a0;
+      --surface: #101018;
+      --surface-code: #12121a;
+      --fg-strong: #d0d0d8;
+      --fg-em: #b0b0b8;
+      --fg-heading: #909098;
+      --border-focus: #2a2a45;
+    }
+
+    [data-theme="light"] {
+      --bg: #f5f5f0;
+      --fg: #2a2a30;
+      --fg-muted: #808088;
+      --fg-faint: #909098;
+      --fg-dim: #a0a0a8;
+      --fg-ghost: #b8b8c0;
+      --accent: #505070;
+      --accent-hover: #404060;
+      --border: #d8d8e0;
+      --border-mid: #c8c8d0;
+      --border-user: #7aaa7a;
+      --fg-user: #3a6a3a;
+      --surface: #eaeae5;
+      --surface-code: #e4e4df;
+      --fg-strong: #1a1a20;
+      --fg-em: #3a3a42;
+      --fg-heading: #4a4a52;
+      --border-focus: #a0a0b8;
     }
 
     body {
-      background: #0a0a0f;
-      color: #c8c8d0;
+      background: var(--bg);
+      color: var(--fg);
       font-family: 'Inter', system-ui, sans-serif;
       font-size: 16px;
       line-height: 1.5;
+      transition: background 0.2s, color 0.2s;
     }
 
     #container {
@@ -35,18 +77,18 @@
     h1 {
       font-size: calc(2rem * var(--user-scale));
       font-weight: 400;
-      color: #606068;
+      color: var(--fg-muted);
       margin-bottom: 16px;
       letter-spacing: 0.05em;
       text-transform: uppercase;
     }
 
     #banner {
-      color: #505058;
+      color: var(--fg-faint);
       font-size: calc(1.15rem * var(--user-scale));
       line-height: 1.6;
       margin-bottom: 40px;
-      border-left: 2px solid #1a1a25;
+      border-left: 2px solid var(--border);
       padding-left: 12px;
     }
 
@@ -59,12 +101,12 @@
     }
 
     #banner a {
-      color: #606080;
+      color: var(--accent);
       text-decoration: none;
     }
 
     #banner a:hover {
-      color: #8080a0;
+      color: var(--accent-hover);
       text-decoration: underline;
     }
 
@@ -74,14 +116,14 @@
     }
 
     .block--assistant {
-      border-left: 2px solid #2a2a35;
+      border-left: 2px solid var(--border-mid);
       padding-left: 12px;
     }
 
     .block--user {
-      border-left: 2px solid #3a5a3a;
+      border-left: 2px solid var(--border-user);
       padding-left: 12px;
-      color: #a0c0a0;
+      color: var(--fg-user);
     }
 
     .token {
@@ -98,7 +140,7 @@
       display: inline-block;
       width: 2px;
       height: 1em;
-      background: #606068;
+      background: var(--fg-muted);
       margin-left: 1px;
       vertical-align: text-bottom;
       animation: blink 1s step-end infinite;
@@ -112,7 +154,7 @@
     .chunk-boundary {
       text-align: center;
       padding: 24px 0;
-      color: #404048;
+      color: var(--fg-dim);
       font-size: 12px;
       font-family: monospace;
       letter-spacing: 0.1em;
@@ -132,7 +174,7 @@
       left: 0;
       right: 0;
       padding: 12px 24px 16px;
-      background: linear-gradient(transparent, #0a0a0f 12px);
+      background: linear-gradient(transparent, var(--bg) 12px);
       display: flex;
       justify-content: center;
     }
@@ -140,9 +182,9 @@
     #input-area textarea {
       width: 100%;
       max-width: 700px;
-      background: #101018;
-      color: #c8c8d0;
-      border: 1px solid #1a1a25;
+      background: var(--surface);
+      color: var(--fg);
+      border: 1px solid var(--border);
       border-radius: 6px;
       padding: 10px 14px;
       font-family: inherit;
@@ -155,40 +197,45 @@
     }
 
     #input-area textarea:focus {
-      border-color: #2a2a45;
+      border-color: var(--border-focus);
     }
 
     #input-area textarea::placeholder {
-      color: #303038;
+      color: var(--fg-ghost);
     }
 
-    /* Render mode toggle */
-    #render-toggle {
+    /* Control buttons */
+    .controls {
       position: fixed;
       top: 16px;
       right: 16px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .controls button {
       background: none;
-      border: 1px solid #1a1a25;
+      border: 1px solid var(--border);
       border-radius: 4px;
-      color: #404048;
+      color: var(--fg-dim);
       font-family: monospace;
       font-size: 11px;
       padding: 4px 10px;
       cursor: pointer;
       letter-spacing: 0.05em;
       transition: color 0.15s, border-color 0.15s;
-      z-index: 10;
     }
 
-    #render-toggle:hover {
-      color: #606068;
-      border-color: #2a2a35;
+    .controls button:hover {
+      color: var(--fg-muted);
+      border-color: var(--border-mid);
     }
 
     /* Rendered markdown within blocks */
     .block--rendered h1, .block--rendered h2, .block--rendered h3,
     .block--rendered h4, .block--rendered h5, .block--rendered h6 {
-      color: #909098;
+      color: var(--fg-heading);
       font-weight: 500;
       margin: 0.8em 0 0.4em;
     }
@@ -202,17 +249,17 @@
     }
 
     .block--rendered strong {
-      color: #d0d0d8;
+      color: var(--fg-strong);
       font-weight: 600;
     }
 
     .block--rendered em {
-      color: #b0b0b8;
+      color: var(--fg-em);
       font-style: italic;
     }
 
     .block--rendered code {
-      background: #12121a;
+      background: var(--surface-code);
       padding: 0.15em 0.4em;
       border-radius: 3px;
       font-family: monospace;
@@ -220,7 +267,7 @@
     }
 
     .block--rendered pre {
-      background: #12121a;
+      background: var(--surface-code);
       padding: 12px 14px;
       border-radius: 4px;
       margin: 0.6em 0;
@@ -242,18 +289,18 @@
     }
 
     .block--rendered a {
-      color: #606080;
+      color: var(--accent);
       text-decoration: none;
     }
 
     .block--rendered a:hover {
-      color: #8080a0;
+      color: var(--accent-hover);
       text-decoration: underline;
     }
 
     .block--rendered hr {
       border: none;
-      border-top: 1px solid #1a1a25;
+      border-top: 1px solid var(--border);
       margin: 1em 0;
     }
 
@@ -262,10 +309,16 @@
       bottom: 16px;
       right: 16px;
       font-size: 11px;
-      color: #404048;
+      color: var(--fg-dim);
       font-family: monospace;
     }
   </style>
+  <script>
+    // Detect system theme before first paint to avoid flash
+    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      document.documentElement.setAttribute('data-theme', 'light')
+    }
+  </script>
 </head>
 <body>
   <div id="container">
@@ -277,7 +330,10 @@
     </div>
     <div id="timeline"></div>
   </div>
-  <button id="render-toggle" title="Toggle markdown rendering">rendered</button>
+  <div class="controls">
+    <button id="theme-toggle" title="Toggle light/dark theme">dark</button>
+    <button id="render-toggle" title="Toggle markdown rendering">rendered</button>
+  </div>
   <div id="status"></div>
   <script type="module" src="./src/main.ts"></script>
 </body>

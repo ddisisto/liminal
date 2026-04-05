@@ -25,15 +25,27 @@ async function main() {
 
   const timelineEl = document.getElementById('timeline')!
   const statusEl = document.getElementById('status')!
-  const toggleBtn = document.getElementById('render-toggle')!
+  const renderBtn = document.getElementById('render-toggle')!
+  const themeBtn = document.getElementById('theme-toggle')!
 
   const cursor = new Cursor()
   const timeline = new Timeline(timelineEl)
 
-  toggleBtn.addEventListener('click', () => {
+  // Sync theme button label with initial state (may have been set by inline script)
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light'
+  themeBtn.textContent = isLight ? 'light' : 'dark'
+
+  themeBtn.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme')
+    const next = current === 'light' ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', next)
+    themeBtn.textContent = next
+  })
+
+  renderBtn.addEventListener('click', () => {
     const next = !timeline.rendered
     timeline.setRendered(next)
-    toggleBtn.textContent = next ? 'rendered' : 'raw'
+    renderBtn.textContent = next ? 'rendered' : 'raw'
   })
   const viewport = new Viewport(document.documentElement, timeline)
   const input = new InputArea()
