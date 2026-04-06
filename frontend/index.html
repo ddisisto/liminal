@@ -194,6 +194,22 @@
       50% { opacity: 0; }
     }
 
+    /* Pull indicator — fades in as gap grows toward threshold */
+    .pull-indicator {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--fg-dim);
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .pull-indicator::before {
+      content: '▼';
+    }
+
     /* Chunk boundary indicator */
     .chunk-boundary {
       text-align: center;

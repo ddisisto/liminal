@@ -1,13 +1,12 @@
 /**
  * Token stream consumer. Takes an async iterable of tokens,
- * renders them into a block element, and advances the cursor.
+ * renders them into a block element with per-token animation.
  *
  * Currently mocks with a timer. Later: WebSocket reader with
  * the same interface.
  */
 
 import type { TokenData } from './types'
-import type { Cursor } from './cursor'
 import type { Timeline } from './timeline'
 import { createTokenSpan, createCursor } from './token-renderer'
 import { measure } from './measurement'
@@ -22,13 +21,12 @@ export interface StreamOptions {
 }
 
 /**
- * Stream tokens into a block element, advancing the cursor as tokens arrive.
+ * Stream tokens into a block element with paced animation.
  * Returns when the stream is exhausted.
  */
 export async function streamTokens(
   tokens: TokenData[],
   blockElement: HTMLElement,
-  cursor: Cursor,
   blockIndex: number,
   timeline: Timeline,
   options: StreamOptions = {},
@@ -55,8 +53,6 @@ export async function streamTokens(
         blockElement.insertBefore(span, cursorEl)
         timeline.pushToken(blockIndex, t)
       }
-      cursor.setTip(blockIndex, tokens.length - 1)
-      cursor.moveToTip()
       break
     }
 
@@ -64,13 +60,6 @@ export async function streamTokens(
     const span = createTokenSpan(token, i)
     blockElement.insertBefore(span, cursorEl)
     timeline.pushToken(blockIndex, token)
-
-    // Advance tip and cursor (if following)
-    const wasAtTip = cursor.atTip
-    cursor.setTip(blockIndex, i)
-    if (wasAtTip) {
-      cursor.moveToTip()
-    }
 
     // Measure
     if (onToken) {

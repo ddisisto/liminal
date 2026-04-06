@@ -7,10 +7,9 @@
  * 3. (Future) Pre-fetched — buffered client-side, rendered with animation
  *
  * Initial load renders ~2 pages of buffered content.
- * Then each scroll-down-at-tip streams one paragraph (one pull = one turn).
+ * Then each gap-at-tip streams one paragraph (one pull = one turn).
  */
 
-import { Cursor } from './cursor'
 import { Timeline } from './timeline'
 import { Viewport } from './viewport'
 import { InputArea } from './input'
@@ -29,7 +28,6 @@ async function main() {
   const renderBtn = document.getElementById('render-toggle')!
   const themeBtn = document.getElementById('theme-toggle')!
 
-  const cursor = new Cursor()
   const timeline = new Timeline(timelineEl)
 
   // Sync theme button label with initial state (may have been set by inline script)
@@ -56,13 +54,7 @@ async function main() {
   const navEnd = document.getElementById('nav-end')!
 
   const jumpToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
-  const jumpToEnd = () => {
-    cursor.moveToTip()
-    viewport.returnToTip()
-    if (cursor.atTip) {
-      viewport.emitTipPull()
-    }
-  }
+  const jumpToEnd = () => viewport.scrollToTip()
 
   navTop.addEventListener('click', jumpToTop)
   navEnd.addEventListener('click', jumpToEnd)
@@ -115,16 +107,10 @@ async function main() {
   input.mount(document.body)
 
   input.onSubmitHandler((text) => {
-    const { block, index } = timeline.addBlock('user')
+    const { block } = timeline.addBlock('user')
     block.element.textContent = text
     block.rawText = text
     tracker.track(block.element, block.id)
-    cursor.setTip(index, 0)
-    cursor.moveToTip()
-  })
-
-  cursor.onChange((pos, atTip) => {
-    viewport.onCursorMove(pos, atTip)
   })
 
   const session = await connect()
@@ -140,34 +126,31 @@ async function main() {
     timeline.renderBuffered(index, turn.tokens, turn.text)
     timeline.renderIfActive(index)
     tracker.track(block.element, turn.sequenceId ?? block.id)
-    cursor.setTip(index, Math.max(0, turn.tokens.length - 1))
     nextTurn++
   }
-  cursor.syncToTip()
 
   statusEl.textContent =
     `${bufferEnd} turns buffered | ` +
     `${turns.length - nextTurn} remaining | ` +
     `scroll down at tip to continue`
 
-  // Phase 2: JIT pull loop — one scroll-down = one turn streamed
+  // Phase 2: JIT pull loop — gap at tip triggers next turn
   // A tip-pull during streaming skips the active animation (renders remaining
   // tokens instantly) AND triggers the next turn as usual.
   let skipController: AbortController | null = null
 
   while (nextTurn < turns.length) {
-    await waitForTipPull(viewport, cursor)
+    await waitForTipPull(viewport)
 
     const turn = turns[nextTurn]
     const { block, index } = timeline.addBlock(turn.role)
     tracker.track(block.element, turn.sequenceId ?? block.id)
+    viewport.scrollToTip()
 
     if (turn.role === 'user' && turn.text) {
       block.element.textContent = turn.text
       block.rawText = turn.text
       timeline.renderIfActive(index)
-      cursor.setTip(index, 0)
-      cursor.moveToTip()
 
     } else {
       // Wire up skip: a tip-pull during streaming aborts the current animation
@@ -177,15 +160,14 @@ async function main() {
       })
 
       // Stream one paragraph — this is the live edge
-      await streamTokens(turn.tokens, block.element, cursor, index, timeline, {
+      await streamTokens(turn.tokens, block.element, index, timeline, {
         tokensPerSecond: 60,
         skipSignal: skipController.signal,
         onToken: (i, total, lineCount) => {
           statusEl.textContent =
             `streaming turn ${nextTurn + 1}/${turns.length} | ` +
             `token ${i + 1}/${total} | ` +
-            `lines: ${lineCount} | ` +
-            `${cursor.atTip ? 'tip' : 'scrollback'}`
+            `lines: ${lineCount}`
         },
       })
 
@@ -197,20 +179,17 @@ async function main() {
     nextTurn++
     statusEl.textContent =
       `${nextTurn}/${turns.length} turns | ` +
-      `${turns.length - nextTurn} remaining | ` +
-      `${cursor.atTip ? 'scroll down for next' : 'scrollback'}`
+      `${turns.length - nextTurn} remaining`
   }
 
   statusEl.textContent = `${turns.length} turns | complete`
 }
 
-function waitForTipPull(viewport: Viewport, cursor: Cursor): Promise<void> {
+function waitForTipPull(viewport: Viewport): Promise<void> {
   return new Promise(resolve => {
     const unsub = viewport.onTipPull(() => {
-      if (cursor.atTip) {
-        unsub()
-        resolve()
-      }
+      unsub()
+      resolve()
     })
   })
 }
