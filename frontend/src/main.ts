@@ -145,7 +145,6 @@ async function main() {
     const turn = turns[nextTurn]
     const { block, index } = timeline.addBlock(turn.role)
     tracker.track(block.element, turn.sequenceId ?? block.id)
-    viewport.scrollToTip()
 
     if (turn.role === 'user' && turn.text) {
       block.element.textContent = turn.text
@@ -177,6 +176,7 @@ async function main() {
     }
 
     nextTurn++
+    viewport.unlockPull()
     statusEl.textContent =
       `${nextTurn}/${turns.length} turns | ` +
       `${turns.length - nextTurn} remaining`

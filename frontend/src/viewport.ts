@@ -16,10 +16,12 @@ type TipPullListener = () => void
 /** How much visible gap (px) between last block and input triggers a pull. */
 const PULL_GAP_THRESHOLD = 200
 
+
 export class Viewport {
   private timeline: Timeline
   private tipPullListeners: TipPullListener[] = []
   private ticking = false
+  private pullLocked = false
   private pinchStartDist = 0
   private pinchBaseScale = 1
   private _userScale = 1
@@ -105,7 +107,8 @@ export class Viewport {
       requestAnimationFrame(() => {
         this.ticking = false
         this.updatePullIndicator()
-        if (this.measureGap() > PULL_GAP_THRESHOLD) {
+        if (!this.pullLocked && this.measureGap() > PULL_GAP_THRESHOLD) {
+          this.pullLocked = true
           this.emitTipPull()
         }
       })
@@ -133,6 +136,11 @@ export class Viewport {
         this.pinchStartDist = 0
       }
     }, { passive: true })
+  }
+
+  /** Allow the next pull to fire. Call after delivered content is ready. */
+  unlockPull(): void {
+    this.pullLocked = false
   }
 
   emitTipPull(): void {
