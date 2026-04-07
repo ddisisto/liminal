@@ -7,12 +7,12 @@ import type { Block, BlockRole, TokenData } from './types'
 import { createTokenSpan } from './token-renderer'
 import { renderMarkdown } from './markdown'
 
-/** Log-curve scale: max at 0 tokens, approaching min at threshold. */
-export function contextScale(
-  totalTokens: number, max: number, min: number, threshold = 2000,
+/** Scale block font size by token count: short blocks are large, long blocks settle smaller. */
+export function blockLengthScale(
+  tokenCount: number, max: number, min: number, threshold = 200,
 ): number {
-  if (totalTokens <= 0) return max
-  const t = Math.min(1, Math.log2(1 + totalTokens) / Math.log2(1 + threshold))
+  if (tokenCount <= 0) return max
+  const t = Math.min(1, Math.log2(1 + tokenCount) / Math.log2(1 + threshold))
   return max - (max - min) * t
 }
 
@@ -50,8 +50,7 @@ export class Timeline {
   addBlock(role: BlockRole): { block: Block; index: number } {
     const element = document.createElement('div')
     element.className = `block block--${role}`
-    const baseSize = contextScale(this._totalTokens, BLOCK_SCALE_MAX, BLOCK_SCALE_MIN)
-    element.style.fontSize = `calc(${baseSize}rem * var(--user-scale, 1))`
+    element.style.fontSize = `calc(${BLOCK_SCALE_MAX}rem * var(--user-scale, 1))`
     this.element.appendChild(element)
 
     const block: Block = {
@@ -105,6 +104,14 @@ export class Timeline {
       this._totalTokens += tokens.length
       block.rawText = tokens.map(t => t.text).join('')
     }
+    this.scaleBlock(block)
+  }
+
+  /** Update a block's font size based on its token count. */
+  scaleBlock(block: Block): void {
+    const count = block.tokens.length || block.rawText.split(/\s+/).length
+    const size = blockLengthScale(count, BLOCK_SCALE_MAX, BLOCK_SCALE_MIN)
+    block.element.style.fontSize = `calc(${size}rem * var(--user-scale, 1))`
   }
 
   /** Current render mode. */

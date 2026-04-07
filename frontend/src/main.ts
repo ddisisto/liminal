@@ -83,7 +83,7 @@ async function main() {
     const titleHeight = rect.height
 
     // progress 0 = title fully visible, 1 = title exiting viewport top
-    const raw = 1 - (titleBottom / (titleHeight + 80))  // 80 = container margin-top
+    const raw = 1 - (titleBottom / titleHeight)
     const progress = Math.max(0, Math.min(1, raw))
     const eased = easeInOut(progress)
 
@@ -172,6 +172,7 @@ async function main() {
 
       unsub()
       skipController = null
+      timeline.scaleBlock(block)
       timeline.renderIfActive(index)
     }
 
