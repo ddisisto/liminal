@@ -2,7 +2,7 @@
 
 This page isn't finished. Not because it's loading — because it's a conversation, and a conversation is only as long as it's been so far. The next piece arrives when you scroll down.
 
-Try zooming the page (Ctrl +/- on desktop, pinch on mobile). The text reflows, but the relationship between blocks stays consistent. Newer content is larger. Older content has receded. Zoom works with that, not against it — because in an ongoing conversation, the current exchange matters most.
+Try zooming the page (Ctrl +/- on desktop, pinch on mobile). The text reflows, but the relationship between blocks stays consistent. Short blocks — questions, headings, key statements — are larger. They want your attention. Longer blocks settle into a denser, quieter size. Zoom works with that, not against it.
 
 ## The pull
 
@@ -12,9 +12,9 @@ This isn't lazy loading or infinite scroll. There's no buffer waiting offscreen.
 
 ## What you're feeling
 
-Notice the text getting smaller as you read further? That's not a bug. New content arrives large because it's the focus of attention right now. Earlier content is still there, still readable, but it's visually receding — the way a conversation from an hour ago is still in memory but no longer foreground.
+Notice that not all blocks are the same size? Short statements and questions are visually prominent — they're the anchors, the turning points. Longer passages are denser, settling into a size that invites sustained reading rather than demanding immediate attention.
 
-This is a first approximation of temporal distance. In a live conversation, it means the most recent exchange always has visual priority, without pushing history out of reach.
+This isn't decoration. It's a first approximation of how content signals its own role. A heading says "orient here." A question says "this matters." A long explanation says "settle in." The text's visual weight comes from what it *is*, not when it arrived.
 
 ## How it's built
 
@@ -34,9 +34,9 @@ The obvious application is conversational AI — a model that generates at the r
 
 ## What you're experiencing now
 
-Try scrolling back up. Everything is still there, still addressable, still carrying its temporal weight. This is a timeline, not a feed.
+Try scrolling back up. Everything is still there, still addressable. This is a timeline, not a feed.
 
-This is a proof of concept. The content is static — these are prewritten paragraphs, not live inference. The streaming animation is simulated. But the mechanics are real: per-token rendering via Pretext, pull-driven pacing, context-weight font scaling, and attention tracking that's already recording which blocks hold your gaze.
+This is a proof of concept. The content is static — these are prewritten paragraphs, not live inference. The streaming animation is simulated. But the mechanics are real: per-token rendering via Pretext, pull-driven pacing, length-based font scaling, and attention tracking that's already recording which blocks hold your gaze.
 
 ## What's next
 
