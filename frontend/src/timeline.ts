@@ -53,8 +53,11 @@ export class Timeline {
     element.style.fontSize = `calc(${BLOCK_SCALE_MAX}rem * var(--user-scale, 1))`
     this.element.appendChild(element)
 
+    const id = `block-${nextId++}`
+    element.id = id
+
     const block: Block = {
-      id: `block-${nextId++}`,
+      id,
       role,
       tokens: [],
       element,

@@ -4,6 +4,7 @@
  */
 
 import type { TokenData } from './types'
+import type { Turn } from './session-client'
 import { mockTokens } from './stream'
 
 // Vite raw imports — loads file content as strings at build time
@@ -55,7 +56,7 @@ const SECTION_PROMPTS = [
  * then split each section into paragraphs.
  * Returns an array of non-empty paragraph strings.
  */
-function docToParagraphs(raw: string): string[] {
+export function docToParagraphs(raw: string): string[] {
   // Strip fenced code blocks before splitting
   const withoutCode = raw.replace(/```[\s\S]*?```/g, '')
   return withoutCode
@@ -66,6 +67,17 @@ function docToParagraphs(raw: string): string[] {
     .filter(p => p !== '---')
     .filter(p => !p.startsWith('>'))
     // Keep headings as short paragraphs, body text as long ones
+}
+
+/**
+ * Convert raw text into Turn[] for the timeline.
+ * All blocks are assistant role — the user is reading, not conversing.
+ */
+export function textToTurns(raw: string): Turn[] {
+  return docToParagraphs(raw).map(p => ({
+    role: 'assistant' as const,
+    tokens: mockTokens(p),
+  }))
 }
 
 /**

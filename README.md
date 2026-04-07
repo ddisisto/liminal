@@ -1,4 +1,6 @@
-# Liminal
+# liminal
+
+*a reading instrument*
 
 > You're reading this on GitHub, which means flat text, no friction, everything at once. **[Try the live demo](https://ddisisto.github.io/liminal/)** for the experience as intended — pure text, no stored data, runs entirely in your browser.
 

@@ -67,14 +67,45 @@ async function main() {
   const input = new InputArea()
   input.mount(document.body)
 
-  input.onSubmitHandler((text) => {
-    const { block } = timeline.addBlock('user')
-    block.element.textContent = text
-    block.rawText = text
-    tracker.track(block.element, block.id)
+  // Drag-and-drop file import on the timeline
+  timelineEl.addEventListener('dragover', (e) => {
+    e.preventDefault()
+    e.dataTransfer!.dropEffect = 'copy'
+  })
+
+  timelineEl.addEventListener('drop', (e) => {
+    e.preventDefault()
+    const file = e.dataTransfer?.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      sessionStorage.setItem('liminal-import', reader.result as string)
+      location.assign('?source=local')
+    }
+    reader.readAsText(file)
   })
 
   const session = await connect()
+
+  // Import mode: repurpose input for paste/URL import when not using live backend
+  if (!session.isLive) {
+    input.setPlaceholder('paste text or a URL to begin reading')
+    input.onSubmitHandler((text) => {
+      if (/^https?:\/\//.test(text)) {
+        location.assign(`?url=${encodeURIComponent(text)}`)
+      } else {
+        sessionStorage.setItem('liminal-import', text)
+        location.assign('?source=local')
+      }
+    })
+  } else {
+    input.onSubmitHandler((text) => {
+      const { block } = timeline.addBlock('user')
+      block.element.textContent = text
+      block.rawText = text
+      tracker.track(block.element, block.id)
+    })
+  }
   const tracker = new ViewportTracker(session)
   const turns = session.turns
   let nextTurn = 0
@@ -176,6 +207,47 @@ async function main() {
   }
 
   statusEl.textContent = `${turns.length} turns | complete`
+
+  // Hash navigation: scroll to #block-N if present
+  if (location.hash) {
+    const target = document.getElementById(location.hash.slice(1))
+    if (target) target.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // Click block → set hash to that block's id
+  timelineEl.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement
+    const block = target.closest('.block')
+    console.log('[click]', { target: target.tagName, classes: target.className, id: target.id, block: block?.id ?? 'none', closest: block?.tagName })
+    if (block?.id) {
+      history.replaceState(null, '', `#${block.id}`)
+    }
+  })
+
+  // Track center block and update hash as user scrolls
+  let hashTicking = false
+  window.addEventListener('scroll', () => {
+    if (hashTicking) return
+    hashTicking = true
+    requestAnimationFrame(() => {
+      hashTicking = false
+      const center = window.innerHeight / 2
+      let closest: { id: string; dist: number } | null = null
+      for (let i = 0; i < timeline.length; i++) {
+        const block = timeline.getBlock(i)
+        if (!block) continue
+        const rect = block.element.getBoundingClientRect()
+        const mid = rect.top + rect.height / 2
+        const dist = Math.abs(mid - center)
+        if (!closest || dist < closest.dist) {
+          closest = { id: block.id, dist }
+        }
+      }
+      if (closest) {
+        history.replaceState(null, '', `#${closest.id}`)
+      }
+    })
+  }, { passive: true })
 }
 
 function waitForTipPull(viewport: Viewport): Promise<void> {

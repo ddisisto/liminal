@@ -106,9 +106,56 @@ async function useMock(): Promise<SessionClient> {
 }
 
 /**
- * Connect to session: try backend, fall back to mock.
+ * Build a session from imported raw text.
+ */
+async function importSession(raw: string): Promise<SessionClient> {
+  const { textToTurns } = await import('./mock')
+  return {
+    turns: textToTurns(raw),
+    sessionId: 'import',
+    isLive: false,
+    sendViewportEvents() {},
+  }
+}
+
+/**
+ * Try loading from URL params: ?url= or ?source=local (sessionStorage).
+ */
+async function tryImport(): Promise<SessionClient | null> {
+  const params = new URLSearchParams(location.search)
+
+  const urlParam = params.get('url')
+  if (urlParam) {
+    try {
+      const resp = await fetch(urlParam)
+      if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`)
+      const raw = await resp.text()
+      console.log(`[liminal] imported from URL: ${urlParam}`)
+      return importSession(raw)
+    } catch (e) {
+      console.warn(`[liminal] URL import failed: ${e}`)
+      return null
+    }
+  }
+
+  if (params.get('source') === 'local') {
+    const raw = sessionStorage.getItem('liminal-import')
+    if (raw) {
+      console.log(`[liminal] imported from sessionStorage (${raw.length} chars)`)
+      return importSession(raw)
+    }
+  }
+
+  return null
+}
+
+/**
+ * Connect to session: try import, then backend, then mock.
  */
 export async function connect(): Promise<SessionClient> {
+  const imported = await tryImport()
+  if (imported) return imported
+
   const ws = await tryWebSocket()
   if (ws) {
     console.log(`[liminal] connected to backend, session ${ws.sessionId}, ${ws.turns.length} turns`)

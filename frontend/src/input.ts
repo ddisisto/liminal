@@ -39,6 +39,11 @@ export class InputArea {
     this.onSubmit = handler
   }
 
+  /** Change placeholder text. */
+  setPlaceholder(text: string): void {
+    this.textarea.placeholder = text
+  }
+
   private autoGrow(): void {
     const ta = this.textarea
 
