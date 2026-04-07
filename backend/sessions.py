@@ -11,7 +11,8 @@ from typing import Any
 
 from backend.storage.database import Database
 
-DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DOCS_DIR = PROJECT_ROOT / "docs"
 
 
 def get_or_create_session(db: Database, title: str | None = None) -> str:
@@ -113,7 +114,7 @@ def seed_demo_session(db: Database) -> str:
     session_id = db.create_session(title="Liminal — Demo")
 
     doc_files = [
-        DOCS_DIR / "intro.md",
+        PROJECT_ROOT / "README.md",
         DOCS_DIR / "project-brief.md",
         DOCS_DIR / "architecture-plan.md",
         DOCS_DIR / "theory.md",

@@ -58,7 +58,7 @@ frontend/src/
 - `docs/project-brief.md` — conceptual design, layer model, design principles
 - `docs/architecture-plan.md` — stack, schema, data flow, component boundaries, WebSocket protocol
 - `docs/theory.md` — coupled oscillator analogy, game theory, memetic acceleration
-- `docs/intro.md` — demo page intro content (pretext.js hook, pull mechanic, applications)
+- `README.md` — demo page intro content, self-hosted through the live demo
 - `docs/research/attention-instrumentation.md` — prior art and implementation priorities for attention capture
 - `docs/research/token-annotation-systems.md` — prior art for token visualization and annotation UX
 - `docs/ux-poc-design.md` — UX PoC requirements, cursor model, module architecture

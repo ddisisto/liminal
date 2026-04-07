@@ -7,7 +7,7 @@ import type { TokenData } from './types'
 import { mockTokens } from './stream'
 
 // Vite raw imports — loads file content as strings at build time
-import introRaw from '../../docs/intro.md?raw'
+import readmeRaw from '../../README.md?raw'
 import briefRaw from '../../docs/project-brief.md?raw'
 import archRaw from '../../docs/architecture-plan.md?raw'
 import theoryRaw from '../../docs/theory.md?raw'
@@ -25,6 +25,7 @@ export interface MockTurn {
 const SECTION_PROMPTS = [
   'OK so what is this pull thing?',
   'What\'s happening with the text size?',
+  'What\'s the bigger idea here?',
   'How is this built?',
   'Where does this go beyond chat?',
   'What am I actually experiencing right now?',
@@ -55,13 +56,16 @@ const SECTION_PROMPTS = [
  * Returns an array of non-empty paragraph strings.
  */
 function docToParagraphs(raw: string): string[] {
-  return raw
+  // Strip fenced code blocks before splitting
+  const withoutCode = raw.replace(/```[\s\S]*?```/g, '')
+  return withoutCode
     .split(/\n\n+/)
     .map(p => p.trim())
     .filter(p => p.length > 0)
-    // Skip the title line and horizontal rules
+    // Skip the title line, horizontal rules, and blockquotes (GitHub disclaimer)
     .filter(p => !p.startsWith('# ') || p.startsWith('## '))
     .filter(p => p !== '---')
+    .filter(p => !p.startsWith('>'))
     // Keep headings as short paragraphs, body text as long ones
 }
 
@@ -71,8 +75,10 @@ function docToParagraphs(raw: string): string[] {
  * at section boundaries (## headings).
  */
 function buildConversation(): MockTurn[] {
+  // Strip Development and License sections from README for the demo
+  const readmeTrimmed = readmeRaw.replace(/## Development[\s\S]*$/, '')
   const allParagraphs = [
-    ...docToParagraphs(introRaw),
+    ...docToParagraphs(readmeTrimmed),
     ...docToParagraphs(briefRaw),
     ...docToParagraphs(archRaw),
     ...docToParagraphs(theoryRaw),
