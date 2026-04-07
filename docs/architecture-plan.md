@@ -6,7 +6,7 @@
 
 ## Overview
 
-Liminal is a self-hosted, browser-based conversational interface with passive attention instrumentation and progressive analytical depth. The architecture prioritises simplicity, low infrastructure overhead, and clean separation between concerns — while preserving room for the system to grow into the more speculative layers described in the project brief.
+Liminal is a self-hosted, browser-based conversational interface with passive attention instrumentation and progressive analytical depth. The architecture prioritises simplicity, low infrastructure overhead, and clean separation between concerns — while preserving room for the system to grow into the more speculative layers described in the project brief. The foundational design principles (viewport ownership, pull-driven pacing, content-intrinsic scaling) are described in the [design philosophy](design-philosophy.md).
 
 The system is single-user, local-first, and designed to run on modest hardware (NVIDIA GTX 1070, 8GB VRAM) during the prototyping phase.
 

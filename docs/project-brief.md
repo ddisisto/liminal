@@ -14,17 +14,16 @@ Liminal begins from the observation that this discards most of the signal. The p
 
 ## Design Principles
 
+The foundational principles — viewport ownership, pull-driven pacing, content signalling its own role, session continuity — are described in the [design philosophy](design-philosophy.md). These hold for any text, independent of AI. The principles below are specific to Liminal's AI layers.
+
 ### Piggyback, don't invent
-The foundational interaction — selecting text while reading — is already habitual and universal. The system instruments this existing behaviour rather than introducing new ones. There is no onboarding. If you can read, you're already using it.
+The foundational interaction — scrolling through text — is already habitual and universal. The system instruments this existing behaviour rather than introducing new ones. There is no onboarding. If you can read, you're already using it.
 
 ### Progressive disclosure as architecture
 Each capability layer is genuinely independent and composes without dependency. No feature gates, no mode switching — just increasing depth available on demand. A new user sees a clean conversation; an experienced user sees an instrument panel.
 
 ### Minimal and technically competent
 No chrome that isn't earning its place. The tool should feel like a well-made text editor crossed with an oscilloscope — precise, quiet, responsive. Transitions communicate state change, not decoration.
-
-### Content signals its own role
-Visual presentation derives from intrinsic properties of the content — density, length, structure — not from imposed metadata or arrival order. Short blocks (questions, headings) are visually prominent; long blocks settle into readable density. The text's visual weight comes from what it *is*.
 
 ### Richness emerges, it isn't imposed
 Taxonomy, classification, and structure are available but never required. The system captures signal at whatever level of intentionality the user brings — from idle selection to deliberate annotation — and lets patterns surface over time.

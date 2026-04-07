@@ -2,7 +2,7 @@
 
 **The Attention Game: Inherited Strategies, Information Asymmetry, and the Dynamics of Human-Model Interaction**
 
-*Openly speculative where it needs to be. Formally grounded where it can be. A companion to the project brief and architecture document.*
+*Openly speculative where it needs to be. Formally grounded where it can be. A companion to the [design philosophy](design-philosophy.md), project brief, and architecture document.*
 
 ---
 
