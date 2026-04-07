@@ -23,6 +23,9 @@ Each capability layer is genuinely independent and composes without dependency. 
 ### Minimal and technically competent
 No chrome that isn't earning its place. The tool should feel like a well-made text editor crossed with an oscilloscope — precise, quiet, responsive. Transitions communicate state change, not decoration.
 
+### Content signals its own role
+Visual presentation derives from intrinsic properties of the content — density, length, structure — not from imposed metadata or arrival order. Short blocks (questions, headings) are visually prominent; long blocks settle into readable density. The text's visual weight comes from what it *is*.
+
 ### Richness emerges, it isn't imposed
 Taxonomy, classification, and structure are available but never required. The system captures signal at whatever level of intentionality the user brings — from idle selection to deliberate annotation — and lets patterns surface over time.
 

@@ -38,8 +38,6 @@ The backend is the intelligence layer. It handles:
 
 **User-model (future)** — placeholder for the third predictive system. Initially, this is just the accumulated attention data in SQLite. Later, a lightweight model (embedding-based or classifier) that runs locally and predicts user behaviour from accumulated signal.
 
-**User-model (future)** — placeholder for the third predictive system. Initially, this is just the accumulated attention data in SQLite. Later, a lightweight model (embedding-based or classifier) that runs locally and predicts user behaviour from accumulated signal.
-
 ### Frontend (TypeScript / Pretext.js)
 
 The frontend is the sensing and rendering layer. It stays deliberately thin.
@@ -64,11 +62,17 @@ Backend → Client:  [token stream...]
 Backend → Client:  { "type": "stopped", "reason": "stop_token" | "eos" | "max_tokens" }
 ```
 
-By default, `stop_tokens` includes `\n\n` (paragraph boundary), making the model generate one paragraph at a time. The user advances by scrolling to the end or pressing space — the same gesture that signals "I've read this, continue." EOS is not special; it just means the model has nothing more to say, and the frontend shows this differently (e.g. prompting for user input rather than offering a continue affordance).
+By default, `stop_tokens` includes `\n\n` (paragraph boundary), making the model generate one paragraph at a time. EOS is not special; it just means the model has nothing more to say, and the frontend shows this differently (e.g. prompting for user input rather than offering a continue affordance).
 
-This is JIT inference: generation is pulled by the reader's pace, not pushed by the model. The user physically cannot advance without their viewport being on the new content. The cadence of pull requests is itself the primary attention signal — paragraph-level dwell with near-perfect reliability, requiring zero additional instrumentation.
+**The gap mechanic**: Pull is triggered spatially. The viewport is always user-controlled — the system never auto-scrolls. When the user scrolls past the last block, a gap opens between the content and the input area. When this gap exceeds a threshold, the next turn is pulled in. A lock prevents multiple pulls from a single gesture; it releases when the new content has been delivered. A visual indicator fades in as the gap approaches the threshold, giving the user feedback on how close they are to triggering the next pull — and the option to hold back.
+
+This works with any scroll method (wheel, touch, keyboard, scrollbar drag) because it operates on the spatial relationship between content and viewport, not on gesture detection. The user owns the viewport; pull is a consequence of where they are, not what input device they used.
+
+This is JIT inference: generation is pulled by the reader's pace, not pushed by the model. The cadence of pull requests is itself the primary attention signal — paragraph-level dwell with near-perfect reliability, requiring zero additional instrumentation.
 
 This works identically for local inference (HF Transformers `stopping_criteria`) and API inference (`stop_tokens` + prefill), both standard alongside `logprobs` support. The schema is unaffected — sequences are bounded by EOS/BOS as before; a stop-token simply causes the boundary to occur sooner.
+
+**Viewport ownership principle**: The user owns the viewport. The system writes content; the user decides when and how to look at it. No auto-scrolling during streaming, no repositioning after content delivery. Each user action results in at most one immediate view change (e.g. End key scrolls to tip). This means content can stream in while the user reads earlier material undisturbed.
 
 ### WebSocket Protocol
 
@@ -238,12 +242,11 @@ liminal/
 │   └── src/
 │       ├── main.ts           # Entry point, JIT pull loop, render toggle, nav, title animation
 │       ├── session-client.ts # Backend connection with mock fallback
-│       ├── cursor.ts         # Reading position, tip detection, change events
-│       ├── viewport.ts       # Scroll/touch/pinch, tip pull events
+│       ├── viewport.ts       # Gap-based pull detection, pinch-to-zoom, pull lock
 │       ├── viewport-tracker.ts # L1 attention: IntersectionObserver, --attention CSS property
 │       ├── token-renderer.ts # Per-token <span> creation, animation, data attributes
 │       ├── stream.ts         # Token consumer with skip signal
-│       ├── timeline.ts       # Block sequence, context-weight scaling, markdown rendering
+│       ├── timeline.ts       # Block sequence, block-length font scaling, markdown rendering
 │       ├── input.ts          # Fixed auto-growing textarea
 │       ├── markdown.ts       # Minimal markdown-to-HTML renderer
 │       ├── measurement.ts    # Pretext.js wrapper
