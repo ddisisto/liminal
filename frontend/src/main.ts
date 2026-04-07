@@ -17,8 +17,6 @@ import { streamTokens } from './stream'
 import { connect } from './session-client'
 import { ViewportTracker } from './viewport-tracker'
 
-/** How many turns to render as buffered content on initial load. */
-const INITIAL_BUFFER_TURNS = 3
 
 async function main() {
   await document.fonts.ready
@@ -65,43 +63,6 @@ async function main() {
     if (e.key === 'Home') { e.preventDefault(); jumpToTop() }
     if (e.key === 'End') { e.preventDefault(); jumpToEnd() }
   })
-  // Scroll-driven title animation: letter-spacing pulls from wide to tight,
-  // sharpest at midpoint. Title stays centred on all screen sizes.
-  const titleEl = document.querySelector('h1')!
-  const SPACING_START = 1.5   // em — initial wide spread
-  const SPACING_END = 0.4     // em — resting tightness
-
-  // Ease-in-out: sharpest rate of change at t=0.5
-  const easeInOut = (t: number) => t < 0.5
-    ? 2 * t * t
-    : 1 - Math.pow(-2 * t + 2, 2) / 2
-
-  let titleTicking = false
-  const updateTitle = () => {
-    const rect = titleEl.getBoundingClientRect()
-    const titleBottom = rect.bottom
-    const titleHeight = rect.height
-
-    // progress 0 = title fully visible, 1 = title exiting viewport top
-    const raw = 1 - (titleBottom / titleHeight)
-    const progress = Math.max(0, Math.min(1, raw))
-    const eased = easeInOut(progress)
-
-    const spacing = SPACING_START + (SPACING_END - SPACING_START) * eased
-    titleEl.style.letterSpacing = `${spacing}em`
-
-    titleTicking = false
-  }
-
-  window.addEventListener('scroll', () => {
-    if (!titleTicking) {
-      titleTicking = true
-      requestAnimationFrame(updateTitle)
-    }
-  }, { passive: true })
-
-  // Set initial state
-  updateTitle()
 
   const input = new InputArea()
   input.mount(document.body)
@@ -118,23 +79,54 @@ async function main() {
   const turns = session.turns
   let nextTurn = 0
 
-  // Phase 1: Render initial buffer instantly
-  const bufferEnd = Math.min(INITIAL_BUFFER_TURNS, turns.length)
-  for (let i = 0; i < bufferEnd; i++) {
-    const turn = turns[i]
+  // Render hero block instantly — it's the landing state
+  if (turns.length > 0) {
+    const turn = turns[0]
     const { block, index } = timeline.addBlock(turn.role)
     timeline.renderBuffered(index, turn.tokens, turn.text)
     timeline.renderIfActive(index)
     tracker.track(block.element, turn.sequenceId ?? block.id)
-    nextTurn++
+    nextTurn = 1
+
+    // Scroll-driven hero animation: letter-spacing pulls from wide to tight,
+    // sharpest at midpoint. Hero stays in flow, scrolls naturally.
+    const heroEl = block.element
+    const SPACING_START = 1.5   // em — initial wide spread
+    const SPACING_END = 0.4     // em — resting tightness
+
+    // Ease-in-out: sharpest rate of change at t=0.5
+    const easeInOut = (t: number) => t < 0.5
+      ? 2 * t * t
+      : 1 - Math.pow(-2 * t + 2, 2) / 2
+
+    let heroTicking = false
+    const updateHero = () => {
+      const rect = heroEl.getBoundingClientRect()
+      // progress 0 = hero fully visible, 1 = hero exiting viewport top
+      const raw = 1 - (rect.bottom / rect.height)
+      const progress = Math.max(0, Math.min(1, raw))
+      const eased = easeInOut(progress)
+
+      const spacing = SPACING_START + (SPACING_END - SPACING_START) * eased
+      heroEl.style.letterSpacing = `${spacing}em`
+
+      heroTicking = false
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!heroTicking) {
+        heroTicking = true
+        requestAnimationFrame(updateHero)
+      }
+    }, { passive: true })
+
+    updateHero()
   }
 
   statusEl.textContent =
-    `${bufferEnd} turns buffered | ` +
-    `${turns.length - nextTurn} remaining | ` +
-    `scroll down at tip to continue`
+    `${turns.length} turns | scroll down to begin`
 
-  // Phase 2: JIT pull loop — gap at tip triggers next turn
+  // JIT pull loop — gap at tip triggers next turn
   // A tip-pull during streaming skips the active animation (renders remaining
   // tokens instantly) AND triggers the next turn as usual.
   let skipController: AbortController | null = null

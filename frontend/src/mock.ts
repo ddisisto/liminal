@@ -62,8 +62,7 @@ function docToParagraphs(raw: string): string[] {
     .split(/\n\n+/)
     .map(p => p.trim())
     .filter(p => p.length > 0)
-    // Skip the title line, horizontal rules, and blockquotes (GitHub disclaimer)
-    .filter(p => !p.startsWith('# ') || p.startsWith('## '))
+    // Skip horizontal rules and blockquotes (GitHub disclaimer)
     .filter(p => p !== '---')
     .filter(p => !p.startsWith('>'))
     // Keep headings as short paragraphs, body text as long ones
