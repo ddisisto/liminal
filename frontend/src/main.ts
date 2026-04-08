@@ -154,6 +154,47 @@ async function main() {
     updateHero()
   }
 
+  // Hash navigation: scroll to #block-N if present
+  if (location.hash) {
+    const target = document.getElementById(location.hash.slice(1))
+    if (target) target.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // Click block → set hash to that block's id
+  timelineEl.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement
+    const block = target.closest('.block')
+    if (block?.id) {
+      history.replaceState(null, '', `#${block.id}`)
+    }
+  })
+
+  // Track center block and update hash as user scrolls
+  // Only start tracking once there are multiple blocks (no point anchoring to the hero)
+  let hashTicking = false
+  window.addEventListener('scroll', () => {
+    if (hashTicking || timeline.length < 2) return
+    hashTicking = true
+    requestAnimationFrame(() => {
+      hashTicking = false
+      const center = window.innerHeight / 2
+      let closest: { id: string; dist: number } | null = null
+      for (let i = 0; i < timeline.length; i++) {
+        const block = timeline.getBlock(i)
+        if (!block) continue
+        const rect = block.element.getBoundingClientRect()
+        const mid = rect.top + rect.height / 2
+        const dist = Math.abs(mid - center)
+        if (!closest || dist < closest.dist) {
+          closest = { id: block.id, dist }
+        }
+      }
+      if (closest) {
+        history.replaceState(null, '', `#${closest.id}`)
+      }
+    })
+  }, { passive: true })
+
   statusEl.textContent =
     `${turns.length} turns | scroll down to begin`
 
@@ -207,47 +248,6 @@ async function main() {
   }
 
   statusEl.textContent = `${turns.length} turns | complete`
-
-  // Hash navigation: scroll to #block-N if present
-  if (location.hash) {
-    const target = document.getElementById(location.hash.slice(1))
-    if (target) target.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  // Click block → set hash to that block's id
-  timelineEl.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement
-    const block = target.closest('.block')
-    console.log('[click]', { target: target.tagName, classes: target.className, id: target.id, block: block?.id ?? 'none', closest: block?.tagName })
-    if (block?.id) {
-      history.replaceState(null, '', `#${block.id}`)
-    }
-  })
-
-  // Track center block and update hash as user scrolls
-  let hashTicking = false
-  window.addEventListener('scroll', () => {
-    if (hashTicking) return
-    hashTicking = true
-    requestAnimationFrame(() => {
-      hashTicking = false
-      const center = window.innerHeight / 2
-      let closest: { id: string; dist: number } | null = null
-      for (let i = 0; i < timeline.length; i++) {
-        const block = timeline.getBlock(i)
-        if (!block) continue
-        const rect = block.element.getBoundingClientRect()
-        const mid = rect.top + rect.height / 2
-        const dist = Math.abs(mid - center)
-        if (!closest || dist < closest.dist) {
-          closest = { id: block.id, dist }
-        }
-      }
-      if (closest) {
-        history.replaceState(null, '', `#${closest.id}`)
-      }
-    })
-  }, { passive: true })
 }
 
 function waitForTipPull(viewport: Viewport): Promise<void> {

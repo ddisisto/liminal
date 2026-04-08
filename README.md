@@ -48,7 +48,11 @@ The obvious application is conversational AI — a model that generates at the r
 
 ## What you're experiencing now
 
-Try scrolling back up. Everything is still there, still addressable. This is a timeline, not a feed.
+Try scrolling back up.
+
+Everything is still there, still addressable.
+
+This is a timeline, not a feed.
 
 This is a proof of concept. The content is static — these are prewritten paragraphs, not live inference. The streaming animation is simulated. But the mechanics are real: per-token rendering via Pretext, pull-driven pacing, length-based font scaling, and attention tracking that's already recording which blocks hold your gaze.
 

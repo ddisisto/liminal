@@ -13,8 +13,8 @@ import type { Timeline } from './timeline'
 
 type TipPullListener = () => void
 
-/** How much visible gap (px) between last block and input triggers a pull. */
-const PULL_GAP_THRESHOLD = 200
+/** How much visible gap (fraction of viewport height) between last block and input triggers a pull. */
+const PULL_GAP_VH = 0.25
 
 
 export class Viewport {
@@ -94,7 +94,8 @@ export class Viewport {
 
   private updatePullIndicator(): void {
     const gap = this.measureGap()
-    const progress = Math.max(0, Math.min(1, gap / PULL_GAP_THRESHOLD))
+    const threshold = window.innerHeight * PULL_GAP_VH
+    const progress = Math.max(0, Math.min(1, gap / threshold))
 
     if (progress <= 0) {
       this.pullIndicator.style.opacity = '0'
@@ -112,7 +113,9 @@ export class Viewport {
       requestAnimationFrame(() => {
         this.ticking = false
         this.updatePullIndicator()
-        if (!this.pullLocked && this.measureGap() > PULL_GAP_THRESHOLD) {
+        const gap = this.measureGap()
+        const threshold = window.innerHeight * PULL_GAP_VH
+        if (!this.pullLocked && gap > threshold) {
           this.pullLocked = true
           this.emitTipPull()
         }
