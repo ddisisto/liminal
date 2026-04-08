@@ -1,10 +1,10 @@
 # Liminal
 
+*an attention instrument*
+
 > You're reading this on GitHub, which means flat text, no friction, everything at once. **[Try the live demo](https://ddisisto.github.io/liminal/)** for the experience as intended — pure text, no stored data, runs entirely in your browser.
 
-This page isn't finished. Not because it's loading — because it's a conversation, and a conversation is only as long as it's been so far. The next piece arrives when you scroll down.
-
-Try zooming the page (Ctrl +/- on desktop, pinch on mobile). The text reflows, but the relationship between blocks stays consistent. Short blocks — questions, headings, key statements — are larger. They want your attention. Longer blocks settle into a denser, quieter size. Zoom works with that, not against it.
+This page isn't finished. Not because it's broken — because you haven't read it yet. The next piece arrives when you scroll down. Your pace, your decision. That's the point.
 
 ## The pull
 
@@ -18,41 +18,49 @@ Notice that not all blocks are the same size? Short statements and questions are
 
 This isn't decoration. It's a first approximation of how content signals its own role. A heading says "orient here." A question says "this matters." A long explanation says "settle in." The text's visual weight comes from what it *is*, not when it arrived.
 
-## The idea
+## The inversion
 
-Current chat interfaces discard most of the signal a reader produces. Scroll-back, pause, re-read, selection — these gestures carry rich information about where meaning lands, but they're invisible to the model.
+Every scroll, pause, and click you make on the internet is already tracked — by the server, for the server's purposes, through means entirely opaque to you. Your attention is one of the most valuable commodities online, and you're not at the table.
 
-Liminal proposes a [layer model](docs/project-brief.md) that starts with JIT inference (generation pulled by the reader's pace) and progressively adds attention capture, annotation, entropy overlays, semantic zoom, user modelling, and adaptive difficulty — each layer independent, composing without dependency.
+Liminal inverts this. The attention tracking you're experiencing right now — the warmth building on blocks you've lingered on — is captured *for you*. How far did you get? What did you re-read? When you scroll back up, that history is visible, reducing your cognitive load without you having to remember or annotate anything.
 
-The deeper theory: a language model's priors encode inherited attention-capture strategies distilled from its training corpus. The user's cognitive priors encode a lifetime of exposure to the same cultural environment. The conversation is a [coupled oscillator system](docs/theory.md), and the interesting dynamics live at the phase boundary between synchronisation and independence.
+**You own your attention data.** It's captured locally, stored locally, never transmitted without your explicit consent. But ownership implies agency — including the choice to share.
+
+## What opens up
+
+**For authors.** Not page views or time-on-page, but per-paragraph attention. Where did the argument lose people? Where did they lean in? Feedback at a resolution that's never existed — offered voluntarily by readers who want the content to improve.
+
+**For communities.** Aggregate attention patterns across readers reveal collective engagement. The passages everyone lingers on. The sections most people skip. A shared attention heatmap is a new kind of annotation, emerging from behaviour rather than commentary.
+
+**For models.** When the reader is in conversation with a language model, attention data closes the loop. The model sees not just what it generated, but what was actually read, re-read, or skipped. This is the signal current interfaces discard entirely.
+
+## The deeper theory
+
+Liminal proposes a [layer model](docs/project-brief.md) that starts with pull-driven pacing and progressively adds attention capture, annotation, entropy overlays, semantic zoom, user modelling, and adaptive difficulty — each layer independent, composing without dependency.
+
+The text you're reading could be static, generated, or anything in between. The attention layer doesn't care about the source — it cares about the reader. A language model's priors encode inherited attention-capture strategies distilled from its training corpus. The user's cognitive priors encode a lifetime of exposure to the same cultural environment. Where these meet is a [coupled oscillator system](docs/theory.md), and the interesting dynamics live at the phase boundary between synchronisation and independence.
 
 ## How it's built
 
-Every word on this page is individually measured and placed by [Pretext.js](https://github.com/chenglou/pretext), a library for precise text layout in the browser. Not a paragraph styled with CSS — each token is its own element, positioned with sub-character accuracy. This gives us per-word addressability: any token can be styled, tracked, or annotated independently.
-
-That level of resolution is what makes the rest possible. When every word is individually addressable, font size can respond to context, reading patterns become measurable at the word level, and the document can reflect its own history. Text on the web has traditionally been a black box at the layout level. You can style it, but you can't truly *instrument* it — not at the resolution where reading actually happens.
+Every word on this page is individually addressable. Each token is its own element with data attributes — it can be styled, tracked, or annotated independently. This gives us per-word resolution: font size responds to context, reading patterns are measurable at the word level, and the document can reflect its own history.
 
 The stack: TypeScript, Vite, native browser APIs, IntersectionObserver for attention capture. Backend (optional): Python, FastAPI, SQLite, WebSocket streaming. The demo runs entirely in the browser with no backend.
 
-## Why this matters beyond chat
-
-The obvious application is conversational AI — a model that generates at the reader's pace rather than dumping everything at once. But the pull mechanic and per-token rendering are interesting on their own. Consider:
-
-**Long-form reading.** An article that reveals itself paragraph by paragraph, tracking where readers slow down, re-read, or abandon. Not for surveillance — for the author. Where did the argument lose people? Where did they lean in?
-
-**Adaptive pacing.** Dense material could slow its own delivery. A technical explanation might arrive one clause at a time; a narrative passage might flow in longer blocks. Your pull cadence tells the system what density you're comfortable with — without asking.
-
-**Typography as interface.** When every token is addressable, size, weight, colour, and spacing can all respond to context. Frequently re-read passages could gain visual weight. The document becomes a heat map of its own reading history.
-
 ## What you're experiencing now
 
-Try scrolling back up. Everything is still there, still addressable. This is a timeline, not a feed.
+Try scrolling back up.
 
-This is a proof of concept. The content is static — these are prewritten paragraphs, not live inference. The streaming animation is simulated. But the mechanics are real: per-token rendering via Pretext, pull-driven pacing, length-based font scaling, and attention tracking that's already recording which blocks hold your gaze.
+Everything is still there, still addressable.
+
+This is a timeline, not a feed.
+
+This is a proof of concept. The content is static — these are prewritten paragraphs, not live inference. The streaming animation is simulated. But the mechanics are real: pull-driven pacing, length-based font scaling, and attention tracking that's already recording which blocks hold your gaze.
 
 ## What's next
 
-The ideas get more interesting from here. The project docs below explore attention capture, entropy overlays, semantic zoom, and the dynamics of interaction between reader and text — whether that text comes from a model, an author, or an algorithm. But the foundation is what you're already using: text that knows it's being read.
+The ideas get more interesting from here. The project docs below explore [attention capture](docs/research/attention-instrumentation.md), entropy overlays, semantic zoom, and the dynamics of interaction between reader and text — whether that text comes from a model, an author, or an algorithm. The [attention ownership](docs/attention-ownership.md) thesis explores what happens when readers control their own attention data.
+
+But the foundation is what you're already using: text that knows it's being read.
 
 Scroll when you're ready.
 
