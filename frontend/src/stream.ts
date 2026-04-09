@@ -9,13 +9,10 @@
 import type { TokenData } from './types'
 import type { Timeline } from './timeline'
 import { createTokenSpan, createCursor } from './token-renderer'
-import { measure } from './measurement'
 
 export interface StreamOptions {
   /** Tokens per second. Default 40. */
   tokensPerSecond?: number
-  /** Called after each token with measurement info. */
-  onToken?: (index: number, total: number, lineCount: number, height: number) => void
   /** When aborted, remaining tokens render instantly (skip animation + pacing). */
   skipSignal?: AbortSignal
 }
@@ -31,17 +28,15 @@ export async function streamTokens(
   timeline: Timeline,
   options: StreamOptions = {},
 ): Promise<void> {
-  const { tokensPerSecond = 40, onToken, skipSignal } = options
+  const { tokensPerSecond = 40, skipSignal } = options
 
   const cursorEl = createCursor()
   blockElement.appendChild(cursorEl)
 
-  let fullText = ''
   let skipped = false
 
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i]
-    fullText += token.text
 
     // If skip was requested, flush remaining tokens instantly
     if (!skipped && skipSignal?.aborted) {
@@ -60,13 +55,6 @@ export async function streamTokens(
     const span = createTokenSpan(token, i)
     blockElement.insertBefore(span, cursorEl)
     timeline.pushToken(blockIndex, token)
-
-    // Measure
-    if (onToken) {
-      const maxWidth = blockElement.clientWidth
-      const { layout } = measure(fullText, maxWidth)
-      onToken(i, tokens.length, layout.lineCount, layout.height)
-    }
 
     // Pace
     await sleep(1000 / tokensPerSecond)

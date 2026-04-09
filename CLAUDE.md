@@ -23,7 +23,7 @@ Branch `reading-instrument` has work-in-progress: text import (paste/file/URL vi
 ## Architecture
 
 - **Backend**: Python, FastAPI, WebSocket, SQLite (WAL mode, raw SQL), session management, viewport event ingestion
-- **Frontend**: TypeScript, @chenglou/pretext (text measurement), Vite, native browser APIs, IntersectionObserver for attention
+- **Frontend**: TypeScript, Vite, native browser APIs, IntersectionObserver for attention
 - **Inference**: Deferred — currently static content seeded from docs. Future: HuggingFace Transformers (local GPU), API fallback
 - **Hardware target**: NVIDIA GTX 1070, 8GB VRAM
 
@@ -50,7 +50,6 @@ frontend/src/
 ├── timeline.ts          # Block sequence, block-length scaling, buffered/rendered modes
 ├── input.ts             # Fixed auto-growing textarea, font scaling, submit handling
 ├── markdown.ts          # Minimal markdown-to-HTML renderer (no dependencies)
-├── measurement.ts       # Pretext.js wrapper — font, layout, resize
 ├── types.ts             # TokenData, Block, BlockRole
 └── mock.ts              # Loads project docs as mock conversation via Vite raw imports
 ```

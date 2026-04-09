@@ -162,12 +162,6 @@ async function main() {
       await streamTokens(turn.tokens, block.element, index, timeline, {
         tokensPerSecond: 60,
         skipSignal: skipController.signal,
-        onToken: (i, total, lineCount) => {
-          statusEl.textContent =
-            `streaming turn ${nextTurn + 1}/${turns.length} | ` +
-            `token ${i + 1}/${total} | ` +
-            `lines: ${lineCount}`
-        },
       })
 
       unsub()
