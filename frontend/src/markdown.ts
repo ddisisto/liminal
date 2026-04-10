@@ -91,6 +91,17 @@ export function renderMarkdown(raw: string): string {
       continue
     }
 
+    // Blockquote
+    if (line.startsWith('&gt; ') || line === '&gt;') {
+      const bqLines: string[] = []
+      while (i < lines.length && (lines[i].startsWith('&gt; ') || lines[i] === '&gt;')) {
+        bqLines.push(lines[i].replace(/^&gt; ?/, ''))
+        i++
+      }
+      out.push(`<blockquote>${renderInline(bqLines.join(' '))}</blockquote>`)
+      continue
+    }
+
     // Paragraph — collect contiguous non-special lines
     const paraLines: string[] = []
     while (
@@ -98,6 +109,8 @@ export function renderMarkdown(raw: string): string {
       lines[i].trim() !== '' &&
       !lines[i].trimStart().startsWith('```') &&
       !lines[i].match(/^#{1,6}\s/) &&
+      !lines[i].startsWith('&gt; ') &&
+      lines[i] !== '&gt;' &&
       !/^\s*[-*]\s/.test(lines[i]) &&
       !/^\s*\d+\.\s/.test(lines[i]) &&
       !/^-{3,}$/.test(lines[i].trim()) &&

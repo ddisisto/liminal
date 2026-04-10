@@ -106,31 +106,10 @@
     h1::before { top: 35%; }
     h1::after { bottom: 35%; }
 
-    #banner {
+    .block--rendered blockquote {
       color: var(--fg-faint);
-      font-size: calc(1.15rem * var(--user-scale));
-      line-height: 1.6;
-      margin-bottom: 40px;
       border-left: 2px solid var(--border);
       padding-left: 12px;
-    }
-
-    #banner p {
-      margin-bottom: 8px;
-    }
-
-    #banner p:last-child {
-      margin-bottom: 0;
-    }
-
-    #banner a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    #banner a:hover {
-      color: var(--accent-hover);
-      text-decoration: underline;
     }
 
     .block {
@@ -408,11 +387,6 @@
 <body>
   <div id="container">
     <h1>Liminal</h1>
-    <div id="banner">
-      <p>Text that knows it's being read. Per-token rendering, pulled by the reader one paragraph at a time.</p>
-      <p>Scroll down at the bottom to advance. This is an early proof of concept — the streaming is simulated, but the rendering mechanics are real.</p>
-      <p><a href="https://github.com/ddisisto/liminal">github.com/ddisisto/liminal</a></p>
-    </div>
     <div id="timeline"></div>
   </div>
   <div class="controls">

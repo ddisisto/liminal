@@ -2,7 +2,9 @@
 
 *an attention instrument*
 
-> You're reading this on GitHub, which means flat text, no friction, everything at once. **[Try the live demo](https://ddisisto.github.io/liminal/)** for the experience as intended — pure text, no stored data, runs entirely in your browser.
+[Use the reader](https://ddisisto.github.io/liminal/) · [Explore the source](https://github.com/ddisisto/liminal)
+
+Text that knows it's being read. Per-token rendering, pulled by the reader one paragraph at a time. Scroll down at the bottom to advance — this is an early proof of concept, but the rendering mechanics are real.
 
 This page isn't finished. Not because it's broken — because you haven't read it yet. The next piece arrives when you scroll down. Your pace, your decision. That's the point.
 
