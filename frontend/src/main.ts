@@ -93,6 +93,7 @@ async function main() {
 
   const session = await connect()
   const tracker = new ViewportTracker(session)
+  await tracker.loadPriorAttention(session.documentId)
   const turns = session.turns
   let nextTurn = 0
 

@@ -9,12 +9,16 @@
  */
 
 import type { SessionClient, ViewportEvent } from './session-client'
+import { putAttentionBatch, getDocumentAttention, type AttentionRecord } from './store'
 
 interface TrackedBlock {
-  sequenceId: string
+  blockId: string
+  blockIndex: number
   element: HTMLElement
   visibleSince: number | null  // Date.now() when entered viewport, null if not visible
   totalMs: number              // cumulative viewport time
+  visits: number               // times scrolled back to this block
+  dirty: boolean               // needs persisting to IndexedDB
 }
 
 const BATCH_INTERVAL_MS = 5000
@@ -31,10 +35,11 @@ export class ViewportTracker {
   private active = true  // false when tab/window is not focused
   private batchTimer: number
   private updateTimer: number
+  private priorAttention: Map<number, number> = new Map()
 
   constructor(client: SessionClient) {
     this.client = client
-    this.sessionId = client.sessionId
+    this.sessionId = client.readingSessionId
 
     this.observer = new IntersectionObserver(
       (entries) => this.onIntersection(entries),
@@ -64,11 +69,22 @@ export class ViewportTracker {
   }
 
   /** Start tracking a block element. Call when a block is added to the timeline. */
-  track(element: HTMLElement, sequenceId: string): void {
-    const block: TrackedBlock = { sequenceId, element, visibleSince: null, totalMs: 0 }
-    element.style.setProperty('--attention', '0')
+  track(element: HTMLElement, blockId: string): void {
+    const blockIndex = this.blocks.length
+    const priorMs = this.priorAttention.get(blockIndex) ?? 0
+    const block: TrackedBlock = { blockId, blockIndex, element, visibleSince: null, totalMs: priorMs, visits: 0, dirty: false }
+    const attention = Math.min(1, priorMs / WARM_THRESHOLD_MS)
+    element.style.setProperty('--attention', attention.toFixed(3))
     this.blocks.push(block)
     this.observer.observe(element)
+  }
+
+  /**
+   * Load prior attention data from IndexedDB for a document.
+   * Call before blocks are tracked to seed warmth from previous sessions.
+   */
+  async loadPriorAttention(docId: string): Promise<void> {
+    this.priorAttention = await getDocumentAttention(docId)
   }
 
   private onIntersection(entries: IntersectionObserverEntry[]): void {
@@ -81,6 +97,8 @@ export class ViewportTracker {
         // Entered viewport
         if (block.visibleSince === null) {
           block.visibleSince = now
+          block.visits++
+          block.dirty = true
         }
       } else {
         // Left viewport (or tab went inactive)
@@ -108,6 +126,7 @@ export class ViewportTracker {
     const duration = now - block.visibleSince
     block.totalMs += duration
     block.visibleSince = null
+    block.dirty = true
 
     // Update CSS immediately on close
     const attention = Math.min(1, block.totalMs / WARM_THRESHOLD_MS)
@@ -117,7 +136,7 @@ export class ViewportTracker {
 
     this.pendingEvents.push({
       session_id: this.sessionId,
-      sequence_id: block.sequenceId,
+      sequence_id: block.blockId,
       visible_from: new Date(now - duration).toISOString(),
       visible_to: new Date(now).toISOString(),
       duration_ms: duration,
@@ -152,6 +171,20 @@ export class ViewportTracker {
   }
 
   private flush(): void {
+    // Persist to IndexedDB
+    const dirtyBlocks = this.blocks.filter(b => b.dirty)
+    if (dirtyBlocks.length > 0) {
+      const records: AttentionRecord[] = dirtyBlocks.map(b => ({
+        sessionId: this.sessionId,
+        blockIndex: b.blockIndex,
+        viewportTime: b.totalMs,
+        visits: b.visits,
+      }))
+      putAttentionBatch(records).catch(() => {})
+      for (const b of dirtyBlocks) b.dirty = false
+    }
+
+    // Sync to backend (if live)
     if (this.pendingEvents.length === 0) return
     const batch = this.pendingEvents.splice(0)
     this.client.sendViewportEvents(batch)

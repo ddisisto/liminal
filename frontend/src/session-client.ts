@@ -1,12 +1,19 @@
 /**
- * Session client — abstracts over WebSocket (real backend) and mock data.
+ * Session client — abstracts over WebSocket (real backend), IndexedDB
+ * (stored documents), and mock data.
  *
- * Tries WebSocket first. If the backend isn't running, falls back to mock.
- * The main loop doesn't need to know which source it's using.
+ * On first load: imports content → stores as document + blocks in IndexedDB.
+ * On subsequent loads: reads from IndexedDB (no re-import).
+ * Backend connection adds sync and inference capabilities.
  */
 
 import type { TokenData } from './types'
 import type { BlockRole } from './types'
+import {
+  getDocument, putDocument, getBlocks, putBlocks,
+  putReadingSession,
+  type StoredDocument, type StoredBlock, type ReadingSession,
+} from './store'
 
 export interface Turn {
   role: BlockRole
@@ -18,11 +25,13 @@ export interface Turn {
 export interface SessionClient {
   /** All turns available in this session. */
   turns: Turn[]
-  /** Session ID (real or 'mock'). */
-  sessionId: string
+  /** Document ID. */
+  documentId: string
+  /** Reading session ID. */
+  readingSessionId: string
   /** Whether this is a live backend connection. */
   isLive: boolean
-  /** Send viewport events (no-op for mock). */
+  /** Send viewport events (no-op for mock/stored). */
   sendViewportEvents(events: ViewportEvent[]): void
 }
 
@@ -35,6 +44,7 @@ export interface ViewportEvent {
   confidence: string
 }
 
+const MOCK_DOC_ID = 'mock-demo'
 const WS_URL = `ws://${location.hostname}:8000/ws`
 const API_URL = `http://${location.hostname}:8000/api`
 
@@ -44,7 +54,6 @@ const API_URL = `http://${location.hostname}:8000/api`
  */
 async function tryWebSocket(): Promise<SessionClient | null> {
   try {
-    // First, get the session list to find the demo session
     const resp = await fetch(`${API_URL}/sessions`, { signal: AbortSignal.timeout(2000) })
     if (!resp.ok) return null
     const sessions = await resp.json()
@@ -52,7 +61,6 @@ async function tryWebSocket(): Promise<SessionClient | null> {
 
     const sessionId = sessions[0].id
 
-    // Fetch full session data via REST (simpler than WS for initial load)
     const sessionResp = await fetch(`${API_URL}/sessions/${sessionId}`)
     if (!sessionResp.ok) return null
     const data = await sessionResp.json()
@@ -65,17 +73,25 @@ async function tryWebSocket(): Promise<SessionClient | null> {
         entropy: tok.entropy ?? Math.random() * 5 + 0.5,
         surprisal: tok.surprisal ?? Math.random() * 4 + 0.2,
       })),
-      // For user turns with a single token, treat as plain text
       text: t.role === 'user' && t.tokens.length === 1 ? t.tokens[0].text : undefined,
       sequenceId: t.sequence_id,
     }))
 
+    const readingSessionId = crypto.randomUUID()
+    await putReadingSession({
+      id: readingSessionId,
+      docId: sessionId,
+      started: Date.now(),
+      lastActive: Date.now(),
+      position: 0,
+    })
+
     return {
       turns,
-      sessionId,
+      documentId: sessionId,
+      readingSessionId,
       isLive: true,
       sendViewportEvents(events: ViewportEvent[]) {
-        // Fire-and-forget POST
         fetch(`${API_URL}/viewport-events`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -89,31 +105,112 @@ async function tryWebSocket(): Promise<SessionClient | null> {
 }
 
 /**
- * Fall back to mock data (for GitHub Pages or when backend is down).
+ * Load from IndexedDB if the mock document was previously stored.
+ * Returns null if not found.
  */
-async function useMock(): Promise<SessionClient> {
+async function tryStored(): Promise<SessionClient | null> {
+  const doc = await getDocument(MOCK_DOC_ID)
+  if (!doc) return null
+
+  const blocks = await getBlocks(MOCK_DOC_ID)
+  if (blocks.length === 0) return null
+
+  const turns: Turn[] = blocks.map(b => ({
+    role: b.role as BlockRole,
+    tokens: b.tokens.map(t => ({
+      text: t,
+      logprob: -(Math.random() * 4 + 0.2),
+      entropy: Math.random() * 5 + 0.5,
+      surprisal: Math.random() * 4 + 0.2,
+    })),
+    text: b.text,
+  }))
+
+  const readingSessionId = crypto.randomUUID()
+  await putReadingSession({
+    id: readingSessionId,
+    docId: MOCK_DOC_ID,
+    started: Date.now(),
+    lastActive: Date.now(),
+    position: 0,
+  })
+
+  console.log(`[liminal] loaded from IndexedDB: ${blocks.length} blocks`)
+  return {
+    turns,
+    documentId: MOCK_DOC_ID,
+    readingSessionId,
+    isLive: false,
+    sendViewportEvents() {},
+  }
+}
+
+/**
+ * Import mock data, store to IndexedDB, return client.
+ */
+async function importMock(): Promise<SessionClient> {
   const { MOCK_CONVERSATION } = await import('./mock')
+
+  const now = Date.now()
+  const doc: StoredDocument = {
+    id: MOCK_DOC_ID,
+    title: 'Liminal — Demo',
+    source: { type: 'mock' },
+    created: now,
+  }
+
+  const blocks: StoredBlock[] = MOCK_CONVERSATION.map((t, i) => ({
+    docId: MOCK_DOC_ID,
+    index: i,
+    role: t.role,
+    tokens: t.tokens.map(tok => tok.text),
+    text: t.text,
+    created: now,
+  }))
+
+  await putDocument(doc)
+  await putBlocks(blocks)
+
+  const readingSessionId = crypto.randomUUID()
+  await putReadingSession({
+    id: readingSessionId,
+    docId: MOCK_DOC_ID,
+    started: now,
+    lastActive: now,
+    position: 0,
+  })
+
+  console.log(`[liminal] imported mock data: ${blocks.length} blocks → IndexedDB`)
+
   return {
     turns: MOCK_CONVERSATION.map(t => ({
       role: t.role,
       tokens: t.tokens,
       text: t.text,
     })),
-    sessionId: 'mock',
+    documentId: MOCK_DOC_ID,
+    readingSessionId,
     isLive: false,
-    sendViewportEvents() {},  // no-op
+    sendViewportEvents() {},
   }
 }
 
 /**
- * Connect to session: try backend, fall back to mock.
+ * Connect to session: try backend → try IndexedDB → import mock.
  */
 export async function connect(): Promise<SessionClient> {
+  // Try live backend first
   const ws = await tryWebSocket()
   if (ws) {
-    console.log(`[liminal] connected to backend, session ${ws.sessionId}, ${ws.turns.length} turns`)
+    console.log(`[liminal] connected to backend, document ${ws.documentId}, ${ws.turns.length} turns`)
     return ws
   }
-  console.log('[liminal] no backend, using mock data')
-  return useMock()
+
+  // Try previously stored document
+  const stored = await tryStored()
+  if (stored) return stored
+
+  // First load: import mock data
+  console.log('[liminal] no backend, importing mock data')
+  return importMock()
 }
