@@ -314,14 +314,13 @@ h1::after { bottom: 35%; }
   top: 16px;
   right: 16px;
   background: none;
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  border: none;
   color: var(--fg-dim);
-  font-size: 18px;
+  font-size: 27px;
   width: 36px;
   height: 36px;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -331,7 +330,6 @@ h1::after { bottom: 35%; }
 .settings-cog:hover,
 .settings-cog--open {
   color: var(--fg-muted);
-  border-color: var(--border-mid);
 }
 
 .settings-panel {
@@ -366,28 +364,37 @@ h1::after { bottom: 35%; }
   letter-spacing: 0.03em;
 }
 
-.settings-toggle {
-  background: none;
+.settings-toggles {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.settings-pill {
+  display: flex;
   border: 1px solid var(--border);
   border-radius: 3px;
+  overflow: hidden;
+}
+
+.settings-pill button {
+  background: none;
+  border: none;
   color: var(--fg-dim);
   font-family: monospace;
   font-size: 11px;
   padding: 2px 8px;
   cursor: pointer;
-  min-width: 40px;
-  text-align: center;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s, background 0.15s;
 }
 
-.settings-toggle:hover {
+.settings-pill button:hover {
   color: var(--fg-muted);
-  border-color: var(--border-mid);
 }
 
-.settings-toggle--on {
+.settings-pill button.active {
   color: var(--fg);
-  border-color: var(--border-mid);
+  background: var(--border);
 }
 
 .settings-separator {

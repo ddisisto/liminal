@@ -59,15 +59,21 @@ export class Settings {
     const panel = document.createElement('div')
     panel.className = 'settings-panel'
 
-    // Theme toggle
-    panel.appendChild(this.buildToggle('Theme', this.theme === 'light', (on) => {
-      this.applyTheme(on ? 'light' : 'dark')
-    }))
+    // Toggle pills row
+    const toggleRow = document.createElement('div')
+    toggleRow.className = 'settings-toggles'
 
-    // Markup toggle
-    panel.appendChild(this.buildToggle('Markup', this.timeline.rendered, (on) => {
-      this.timeline.setRendered(on)
-    }, ['raw', 'rich']))
+    toggleRow.appendChild(this.buildPill(['dark', 'light'],
+      this.theme === 'light' ? 1 : 0,
+      (i) => this.applyTheme(i === 1 ? 'light' : 'dark'),
+    ))
+
+    toggleRow.appendChild(this.buildPill(['raw', 'rich'],
+      this.timeline.rendered ? 1 : 0,
+      (i) => this.timeline.setRendered(i === 1),
+    ))
+
+    panel.appendChild(toggleRow)
 
     // Separator
     panel.appendChild(this.buildSeparator())
@@ -94,41 +100,29 @@ export class Settings {
     return panel
   }
 
-  private buildToggle(
-    label: string,
-    initial: boolean,
-    onChange: (on: boolean) => void,
-    labels?: [string, string],
+  private buildPill(
+    labels: string[],
+    initial: number,
+    onChange: (index: number) => void,
   ): HTMLElement {
-    const row = document.createElement('label')
-    row.className = 'settings-row'
+    const pill = document.createElement('div')
+    pill.className = 'settings-pill'
+    let active = initial
 
-    const text = document.createElement('span')
-    text.className = 'settings-label'
-    text.textContent = label
-
-    const toggle = document.createElement('button')
-    toggle.className = 'settings-toggle'
-    let state = initial
-
-    const offLabel = labels?.[0] ?? 'off'
-    const onLabel = labels?.[1] ?? 'on'
-
-    const update = () => {
-      toggle.textContent = state ? onLabel : offLabel
-      toggle.classList.toggle('settings-toggle--on', state)
-    }
-    update()
-
-    toggle.addEventListener('click', () => {
-      state = !state
-      update()
-      onChange(state)
+    const buttons = labels.map((label, i) => {
+      const btn = document.createElement('button')
+      btn.textContent = label
+      btn.addEventListener('click', () => {
+        active = i
+        buttons.forEach((b, j) => b.classList.toggle('active', j === i))
+        onChange(i)
+      })
+      pill.appendChild(btn)
+      return btn
     })
 
-    row.appendChild(text)
-    row.appendChild(toggle)
-    return row
+    buttons[active].classList.add('active')
+    return pill
   }
 
   private buildSlider(opts: {
