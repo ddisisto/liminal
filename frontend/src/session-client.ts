@@ -44,7 +44,7 @@ export interface ViewportEvent {
   confidence: string
 }
 
-const MOCK_DOC_ID = 'mock-demo'
+const MOCK_DOC_ID = 'readme-content'
 const WS_URL = `ws://${location.hostname}:8000/ws`
 const API_URL = `http://${location.hostname}:8000/api`
 
@@ -146,25 +146,26 @@ async function tryStored(): Promise<SessionClient | null> {
 }
 
 /**
- * Import mock data, store to IndexedDB, return client.
+ * Import README as content document, store to IndexedDB, return client.
  */
-async function importMock(): Promise<SessionClient> {
-  const { MOCK_CONVERSATION } = await import('./mock')
+async function importContent(): Promise<SessionClient> {
+  const { loadReadmeBlocks } = await import('./mock')
+  const contentBlocks = loadReadmeBlocks()
 
   const now = Date.now()
   const doc: StoredDocument = {
     id: MOCK_DOC_ID,
-    title: 'Liminal — Demo',
-    source: { type: 'mock' },
+    title: 'Liminal',
+    source: { type: 'file', ref: 'README.md' },
     created: now,
   }
 
-  const blocks: StoredBlock[] = MOCK_CONVERSATION.map((t, i) => ({
+  const blocks: StoredBlock[] = contentBlocks.map((b, i) => ({
     docId: MOCK_DOC_ID,
     index: i,
-    role: t.role,
-    tokens: t.tokens.map(tok => tok.text),
-    text: t.text,
+    role: b.role,
+    tokens: b.tokens.map(tok => tok.text),
+    text: b.text,
     created: now,
   }))
 
@@ -180,13 +181,13 @@ async function importMock(): Promise<SessionClient> {
     position: 0,
   })
 
-  console.log(`[liminal] imported mock data: ${blocks.length} blocks → IndexedDB`)
+  console.log(`[liminal] imported content: ${blocks.length} blocks → IndexedDB`)
 
   return {
-    turns: MOCK_CONVERSATION.map(t => ({
-      role: t.role,
-      tokens: t.tokens,
-      text: t.text,
+    turns: contentBlocks.map(b => ({
+      role: b.role,
+      tokens: b.tokens,
+      text: b.text,
     })),
     documentId: MOCK_DOC_ID,
     readingSessionId,
@@ -210,7 +211,7 @@ export async function connect(): Promise<SessionClient> {
   const stored = await tryStored()
   if (stored) return stored
 
-  // First load: import mock data
-  console.log('[liminal] no backend, importing mock data')
-  return importMock()
+  // First load: import content
+  console.log('[liminal] no backend, importing content')
+  return importContent()
 }

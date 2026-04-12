@@ -7,7 +7,7 @@ export interface TokenData {
 }
 
 /** Who authored a block. */
-export type BlockRole = 'user' | 'assistant'
+export type BlockRole = 'user' | 'assistant' | 'content'
 
 /** A block in the conversation timeline. */
 export interface Block {

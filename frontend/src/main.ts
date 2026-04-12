@@ -98,11 +98,11 @@ async function main() {
   let nextTurn = 0
 
   statusEl.textContent =
-    `${turns.length} turns | scroll down to begin`
+    `${turns.length} blocks | scroll down to begin`
 
-  // JIT pull loop — gap at tip triggers next turn.
+  // JIT pull loop — gap at tip triggers next block.
   // A tip-pull during streaming skips the active animation (renders remaining
-  // tokens instantly) AND triggers the next turn as usual.
+  // tokens instantly) AND triggers the next block as usual.
   let skipController: AbortController | null = null
 
   while (nextTurn < turns.length) {
@@ -112,38 +112,31 @@ async function main() {
     const { block, index } = timeline.addBlock(turn.role)
     tracker.track(block.element, turn.sequenceId ?? block.id)
 
-    if (turn.role === 'user' && turn.text) {
-      block.element.textContent = turn.text
-      block.rawText = turn.text
-      timeline.renderIfActive(index)
+    // Wire up skip: a tip-pull during streaming aborts the current animation
+    skipController = new AbortController()
+    const unsub = viewport.onTipPull(() => {
+      skipController?.abort()
+    })
 
-    } else {
-      // Wire up skip: a tip-pull during streaming aborts the current animation
-      skipController = new AbortController()
-      const unsub = viewport.onTipPull(() => {
-        skipController?.abort()
-      })
+    // Stream one block — this is the live edge
+    await streamTokens(turn.tokens, block.element, index, timeline, {
+      tokensPerSecond: settings.pace,
+      skipSignal: skipController.signal,
+    })
 
-      // Stream one paragraph — this is the live edge
-      await streamTokens(turn.tokens, block.element, index, timeline, {
-        tokensPerSecond: settings.pace,
-        skipSignal: skipController.signal,
-      })
-
-      unsub()
-      skipController = null
-      timeline.scaleBlock(block)
-      timeline.renderIfActive(index)
-    }
+    unsub()
+    skipController = null
+    timeline.scaleBlock(block)
+    timeline.renderIfActive(index)
 
     nextTurn++
     viewport.unlockPull()
     statusEl.textContent =
-      `${nextTurn}/${turns.length} turns | ` +
+      `${nextTurn}/${turns.length} blocks | ` +
       `${turns.length - nextTurn} remaining`
   }
 
-  statusEl.textContent = `${turns.length} turns | complete`
+  statusEl.textContent = `${turns.length} blocks | complete`
 }
 
 function waitForTipPull(viewport: Viewport): Promise<void> {

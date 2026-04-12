@@ -1,5 +1,5 @@
 /**
- * The conversation as a sequence of blocks.
+ * The document as a sequence of blocks.
  * Manages block creation, ordering, and the DOM container.
  */
 
