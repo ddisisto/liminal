@@ -1,13 +1,8 @@
 /**
  * Liminal UX PoC — main entry point.
  *
- * Three modes of content:
- * 1. Buffered — history/initial load, rendered instantly
- * 2. Streaming — live edge, per-token animation
- * 3. (Future) Pre-fetched — buffered client-side, rendered with animation
- *
- * Initial load renders ~2 pages of buffered content.
- * Then each gap-at-tip streams one paragraph (one pull = one turn).
+ * Every block is pull-driven: nothing appears until the space it will
+ * occupy is scrolled into view. One pull = one turn.
  */
 
 import { Timeline } from './timeline'
@@ -16,9 +11,6 @@ import { InputArea } from './input'
 import { streamTokens } from './stream'
 import { connect } from './session-client'
 import { ViewportTracker } from './viewport-tracker'
-
-/** How many turns to render as buffered content on initial load. */
-const INITIAL_BUFFER_TURNS = 3
 
 async function main() {
   await document.fonts.ready
@@ -118,23 +110,10 @@ async function main() {
   const turns = session.turns
   let nextTurn = 0
 
-  // Phase 1: Render initial buffer instantly
-  const bufferEnd = Math.min(INITIAL_BUFFER_TURNS, turns.length)
-  for (let i = 0; i < bufferEnd; i++) {
-    const turn = turns[i]
-    const { block, index } = timeline.addBlock(turn.role)
-    timeline.renderBuffered(index, turn.tokens, turn.text)
-    timeline.renderIfActive(index)
-    tracker.track(block.element, turn.sequenceId ?? block.id)
-    nextTurn++
-  }
-
   statusEl.textContent =
-    `${bufferEnd} turns buffered | ` +
-    `${turns.length - nextTurn} remaining | ` +
-    `scroll down at tip to continue`
+    `${turns.length} turns | scroll down to begin`
 
-  // Phase 2: JIT pull loop — gap at tip triggers next turn
+  // JIT pull loop — gap at tip triggers next turn.
   // A tip-pull during streaming skips the active animation (renders remaining
   // tokens instantly) AND triggers the next turn as usual.
   let skipController: AbortController | null = null

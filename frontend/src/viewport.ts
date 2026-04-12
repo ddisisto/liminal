@@ -65,19 +65,21 @@ export class Viewport {
    * is within the viewport). Returns 0 if in scrollback.
    */
   private measureGap(): number {
-    const lastBlock = this.timeline.getBlock(this.timeline.length - 1)
-    if (!lastBlock) return 0
-
     const inputArea = document.getElementById('input-area')
     if (!inputArea) return 0
 
-    const blockBottom = lastBlock.element.getBoundingClientRect().bottom
     const inputTop = inputArea.getBoundingClientRect().top
+    const lastBlock = this.timeline.getBlock(this.timeline.length - 1)
 
-    // Only count the gap if the last block's bottom is visible on screen
-    if (blockBottom < 0 || blockBottom > inputTop) return 0
+    // Before any blocks exist, measure from the timeline container's top
+    const refBottom = lastBlock
+      ? lastBlock.element.getBoundingClientRect().bottom
+      : this.timeline.element.getBoundingClientRect().top
 
-    return inputTop - blockBottom
+    // Only count the gap if the reference point is visible on screen
+    if (refBottom < 0 || refBottom > inputTop) return 0
+
+    return inputTop - refBottom
   }
 
   private createPullIndicator(): HTMLElement {
