@@ -21,9 +21,9 @@ async function main() {
   const statusEl = document.getElementById('status')!
 
   const timeline = new Timeline(timelineEl)
-  const _settings = new Settings(timeline)
+  const settings = new Settings(timeline)
 
-  const viewport = new Viewport(document.documentElement, timeline)
+  const viewport = new Viewport(document.documentElement, timeline, settings)
 
   // Navigation: jump to top / jump to end (tip)
   const navTop = document.getElementById('nav-top')!
@@ -123,7 +123,7 @@ async function main() {
 
       // Stream one paragraph — this is the live edge
       await streamTokens(turn.tokens, block.element, index, timeline, {
-        tokensPerSecond: 60,
+        tokensPerSecond: settings.pace,
         skipSignal: skipController.signal,
       })
 

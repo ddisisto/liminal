@@ -10,19 +10,14 @@
  */
 
 import type { Timeline } from './timeline'
+import type { Settings } from './settings'
 
 type TipPullListener = () => void
-
-/** Visible gap between last block and input as a fraction of viewport height. */
-const PULL_GAP_FRACTION = 0.2
-
-function pullGapThreshold(): number {
-  return Math.max(80, window.innerHeight * PULL_GAP_FRACTION)
-}
 
 
 export class Viewport {
   private timeline: Timeline
+  private settings: Settings
   private tipPullListeners: TipPullListener[] = []
   private ticking = false
   private pullLocked = false
@@ -31,8 +26,9 @@ export class Viewport {
   private _userScale = 1
   private pullIndicator: HTMLElement
 
-  constructor(scrollContainer: HTMLElement, timeline: Timeline) {
+  constructor(scrollContainer: HTMLElement, timeline: Timeline, settings: Settings) {
     this.timeline = timeline
+    this.settings = settings
     this.pullIndicator = this.createPullIndicator()
     this.setupScrollListener(scrollContainer)
   }
@@ -55,7 +51,7 @@ export class Viewport {
 
     const blockRect = lastBlock.element.getBoundingClientRect()
     const viewportHeight = window.innerHeight
-    const targetOffsetFromTop = Math.floor(viewportHeight * 2 / 3)
+    const targetOffsetFromTop = Math.floor(viewportHeight * this.settings.tipPosition)
     const scrollDelta = blockRect.bottom - targetOffsetFromTop
 
     if (scrollDelta > 0) {
@@ -68,6 +64,10 @@ export class Viewport {
    * Returns the gap only when the last block is visible on screen (its bottom
    * is within the viewport). Returns 0 if in scrollback.
    */
+  private pullGapThreshold(): number {
+    return Math.max(80, window.innerHeight * this.settings.pullThreshold)
+  }
+
   private measureGap(): number {
     const inputArea = document.getElementById('input-area')
     if (!inputArea) return 0
@@ -95,7 +95,7 @@ export class Viewport {
 
   private updatePullIndicator(): void {
     const gap = this.measureGap()
-    const progress = Math.max(0, Math.min(1, gap / pullGapThreshold()))
+    const progress = Math.max(0, Math.min(1, gap / this.pullGapThreshold()))
 
     if (progress <= 0) {
       this.pullIndicator.style.opacity = '0'
@@ -113,7 +113,7 @@ export class Viewport {
       requestAnimationFrame(() => {
         this.ticking = false
         this.updatePullIndicator()
-        if (!this.pullLocked && this.measureGap() > pullGapThreshold()) {
+        if (!this.pullLocked && this.measureGap() > this.pullGapThreshold()) {
           this.pullLocked = true
           this.emitTipPull()
         }

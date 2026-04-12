@@ -1,7 +1,6 @@
 /**
  * Settings panel — cog icon, flyout, controls.
- * Currently: theme toggle, markup toggle.
- * Planned: pace slider, tip position slider, locked future controls.
+ * Holds reactive values that other modules read.
  */
 
 import type { Timeline } from './timeline'
@@ -11,6 +10,13 @@ export class Settings {
   private panel: HTMLElement
   private cog: HTMLButtonElement
   private open = false
+
+  /** Tokens per second for streaming. */
+  pace = 60
+  /** Where new content lands in viewport (0 = top, 1 = bottom). */
+  tipPosition = 0.67
+  /** Pull threshold as fraction of viewport height. */
+  pullThreshold = 0.2
 
   constructor(timeline: Timeline) {
     this.timeline = timeline
@@ -65,6 +71,24 @@ export class Settings {
       this.timeline.setRendered(on)
     }, ['raw', 'rich']))
 
+    // Separator
+    panel.appendChild(this.buildSeparator())
+
+    // Pace slider
+    panel.appendChild(this.buildSlider('Pace', 5, 300, this.pace, (v) => {
+      this.pace = v
+    }, (v) => `${v} tps`))
+
+    // Tip position slider
+    panel.appendChild(this.buildSlider('Tip position', 0.2, 0.9, this.tipPosition, (v) => {
+      this.tipPosition = v
+    }, (v) => `${Math.round(v * 100)}%`))
+
+    // Pull threshold slider
+    panel.appendChild(this.buildSlider('Pull threshold', 0.05, 0.5, this.pullThreshold, (v) => {
+      this.pullThreshold = v
+    }, (v) => `${Math.round(v * 100)}%`))
+
     return panel
   }
 
@@ -103,6 +127,56 @@ export class Settings {
     row.appendChild(text)
     row.appendChild(toggle)
     return row
+  }
+
+  private buildSlider(
+    label: string,
+    min: number,
+    max: number,
+    initial: number,
+    onChange: (value: number) => void,
+    format: (value: number) => string,
+  ): HTMLElement {
+    const row = document.createElement('div')
+    row.className = 'settings-row settings-row--slider'
+
+    const header = document.createElement('div')
+    header.className = 'settings-slider-header'
+
+    const text = document.createElement('span')
+    text.className = 'settings-label'
+    text.textContent = label
+
+    const valueEl = document.createElement('span')
+    valueEl.className = 'settings-value'
+    valueEl.textContent = format(initial)
+
+    header.appendChild(text)
+    header.appendChild(valueEl)
+
+    const input = document.createElement('input')
+    input.type = 'range'
+    input.className = 'settings-slider'
+    input.min = String(min)
+    input.max = String(max)
+    input.step = max >= 1 ? '1' : '0.01'
+    input.value = String(initial)
+
+    input.addEventListener('input', () => {
+      const v = parseFloat(input.value)
+      valueEl.textContent = format(v)
+      onChange(v)
+    })
+
+    row.appendChild(header)
+    row.appendChild(input)
+    return row
+  }
+
+  private buildSeparator(): HTMLElement {
+    const sep = document.createElement('div')
+    sep.className = 'settings-separator'
+    return sep
   }
 
   private applyTheme(theme: 'dark' | 'light'): void {
