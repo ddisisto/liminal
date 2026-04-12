@@ -33,6 +33,16 @@ export class Viewport {
     this.pullIndicator = this.createPullIndicator()
     this.setupScrollListener(scrollContainer)
     this.setupGapClick()
+
+    // Initial gap check — if gap already exceeds threshold on load
+    // (e.g. large restored gap setting), fire without waiting for scroll
+    requestAnimationFrame(() => {
+      this.updatePullIndicator()
+      if (!this.pullLocked && this.measureGap() > this.pullGapThreshold()) {
+        this.pullLocked = true
+        this.emitTipPull()
+      }
+    })
   }
 
   /** Bind the nav-end button so it fades out as the gap opens. */
