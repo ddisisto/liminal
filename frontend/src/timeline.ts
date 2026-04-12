@@ -46,6 +46,14 @@ export class Timeline {
     return this.blocks.length
   }
 
+  /** Remove all blocks and reset state. */
+  clear(): void {
+    this.element.innerHTML = ''
+    this.blocks = []
+    this._totalTokens = 0
+    this.rawDomCache.clear()
+  }
+
   /** Add a new block to the end of the timeline. Returns its index. */
   addBlock(role: BlockRole): { block: Block; index: number } {
     const element = document.createElement('div')

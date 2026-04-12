@@ -1,8 +1,9 @@
 /**
- * Liminal UX PoC — main entry point.
+ * Liminal — main entry point.
  *
- * Every block is pull-driven: nothing appears until the space it will
- * occupy is scrolled into view. One pull = one turn.
+ * Documents are pull-driven: nothing appears until the reader
+ * scrolls into its space. Links between documents navigate the
+ * document graph.
  */
 
 import './styles.css'
@@ -11,9 +12,9 @@ import { Viewport } from './viewport'
 import { InputArea } from './input'
 import { Settings } from './settings'
 import { streamTokens } from './stream'
-import { connect } from './session-client'
 import { ViewportTracker } from './viewport-tracker'
 import { updateSessionPosition } from './store'
+import { openDocument, resolveLink, hasBundledDoc, type DocumentSession } from './documents'
 
 async function main() {
   await document.fonts.ready
@@ -39,18 +40,16 @@ async function main() {
   navEnd.addEventListener('click', jumpToEnd)
 
   document.addEventListener('keydown', (e) => {
-    // Skip if user is typing in an input/textarea
     if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) return
     if (e.key === 'Home') { e.preventDefault(); jumpToTop() }
     if (e.key === 'End') { e.preventDefault(); jumpToEnd() }
   })
-  // Scroll-driven title animation: letter-spacing pulls from wide to tight,
-  // sharpest at midpoint. Title stays centred on all screen sizes.
-  const titleEl = document.querySelector('h1')!
-  const SPACING_START = 1.5   // em — initial wide spread
-  const SPACING_END = 0.4     // em — resting tightness
 
-  // Ease-in-out: sharpest rate of change at t=0.5
+  // Scroll-driven title animation: letter-spacing pulls from wide to tight
+  const titleEl = document.querySelector('h1')!
+  const SPACING_START = 1.5
+  const SPACING_END = 0.4
+
   const easeInOut = (t: number) => t < 0.5
     ? 2 * t * t
     : 1 - Math.pow(-2 * t + 2, 2) / 2
@@ -60,15 +59,11 @@ async function main() {
     const rect = titleEl.getBoundingClientRect()
     const titleBottom = rect.bottom
     const titleHeight = rect.height
-
-    // progress 0 = title fully visible, 1 = title exiting viewport top
     const raw = 1 - (titleBottom / titleHeight)
     const progress = Math.max(0, Math.min(1, raw))
     const eased = easeInOut(progress)
-
     const spacing = SPACING_START + (SPACING_END - SPACING_START) * eased
     titleEl.style.letterSpacing = `${spacing}em`
-
     titleTicking = false
   }
 
@@ -79,92 +74,173 @@ async function main() {
     }
   }, { passive: true })
 
-  // Set initial state
   updateTitle()
 
   const input = new InputArea()
   input.mount(document.body)
 
+  // ── Document reading loop ───────────────────────────────
+
+  // Abort controller for cancelling the current reading loop on document switch
+  let readingAbort: AbortController | null = null
+  let currentPath = ''
+  let tracker: ViewportTracker | null = null
+
+  async function readDocument(doc: DocumentSession): Promise<void> {
+    // Cancel any in-progress reading loop
+    if (readingAbort) readingAbort.abort()
+    readingAbort = new AbortController()
+    const { signal } = readingAbort
+
+    // Clean up prior tracker
+    if (tracker) tracker.destroy()
+
+    currentPath = doc.path
+    const { turns, readingSessionId, lastPosition } = doc
+
+    // Clear and reset
+    timeline.clear()
+    window.scrollTo(0, 0)
+    viewport.unlockPull()
+
+    // Set up attention tracking
+    tracker = new ViewportTracker({
+      readingSessionId,
+      documentId: doc.documentId,
+      isLive: false,
+      turns: [],
+      sendViewportEvents() {},
+    })
+    await tracker.loadPriorAttention(doc.documentId)
+
+    let nextTurn = 0
+
+    // Resume: render previously-seen blocks instantly
+    const resumePoint = Math.min(lastPosition, turns.length)
+    if (resumePoint > 0) {
+      for (let i = 0; i < resumePoint; i++) {
+        const turn = turns[i]
+        const { block, index } = timeline.addBlock(turn.role)
+        tracker.track(block.element, block.id)
+        timeline.renderBuffered(index, turn.tokens, turn.text)
+        timeline.renderIfActive(index)
+      }
+      nextTurn = resumePoint
+      console.log(`[liminal] resumed: ${resumePoint} blocks rendered instantly`)
+    }
+
+    statusEl.textContent = resumePoint > 0
+      ? `${nextTurn}/${turns.length} blocks | ${turns.length - nextTurn} remaining`
+      : `${turns.length} blocks | scroll down to begin`
+
+    // Pull loop
+    let skipController: AbortController | null = null
+
+    while (nextTurn < turns.length) {
+      // Wait for pull, but bail if document is switching
+      try {
+        await waitForTipPull(viewport, signal)
+      } catch {
+        return  // aborted — document is switching
+      }
+
+      const turn = turns[nextTurn]
+      const { block, index } = timeline.addBlock(turn.role)
+      tracker.track(block.element, block.id)
+
+      skipController = new AbortController()
+      const unsub = viewport.onTipPull(() => {
+        skipController?.abort()
+      })
+
+      await streamTokens(turn.tokens, block.element, index, timeline, {
+        tokensPerSecond: settings.pace,
+        skipSignal: skipController.signal,
+      })
+
+      unsub()
+      skipController = null
+      timeline.scaleBlock(block)
+      timeline.renderIfActive(index)
+
+      nextTurn++
+      viewport.unlockPull()
+
+      updateSessionPosition(readingSessionId, nextTurn).catch(() => {})
+
+      statusEl.textContent =
+        `${nextTurn}/${turns.length} blocks | ` +
+        `${turns.length - nextTurn} remaining`
+    }
+
+    statusEl.textContent = `${turns.length} blocks | complete`
+  }
+
+  // ── Link interception ───────────────────────────────────
+
+  timelineEl.addEventListener('click', async (e) => {
+    const anchor = (e.target as Element).closest('a')
+    if (!anchor) return
+
+    const href = anchor.getAttribute('href')
+    if (!href) return
+
+    // Only intercept relative .md links
+    if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//')) return
+    if (!href.split('#')[0].endsWith('.md')) return
+
+    e.preventDefault()
+
+    const targetPath = resolveLink(href, currentPath)
+    if (!hasBundledDoc(targetPath)) {
+      console.warn(`[liminal] document not in bundle: ${targetPath}`)
+      return
+    }
+
+    const doc = await openDocument(targetPath)
+    if (!doc) {
+      console.warn(`[liminal] failed to open: ${targetPath}`)
+      return
+    }
+
+    readDocument(doc)
+  })
+
+  // ── User input (future: conversation) ───────────────────
+
   input.onSubmitHandler((text) => {
     const { block } = timeline.addBlock('user')
     block.element.textContent = text
     block.rawText = text
-    tracker.track(block.element, block.id)
+    if (tracker) tracker.track(block.element, block.id)
   })
 
-  const session = await connect()
-  const tracker = new ViewportTracker(session)
-  await tracker.loadPriorAttention(session.documentId)
-  const turns = session.turns
-  let nextTurn = 0
+  // ── Open root document ──────────────────────────────────
 
-  // Resume mode: render previously-seen blocks instantly (no pull, no animation)
-  const resumePoint = Math.min(session.lastPosition, turns.length)
-  if (resumePoint > 0) {
-    for (let i = 0; i < resumePoint; i++) {
-      const turn = turns[i]
-      const { block, index } = timeline.addBlock(turn.role)
-      tracker.track(block.element, turn.sequenceId ?? block.id)
-      timeline.renderBuffered(index, turn.tokens, turn.text)
-      timeline.renderIfActive(index)
-    }
-    nextTurn = resumePoint
-    console.log(`[liminal] resumed: ${resumePoint} blocks rendered instantly`)
+  const root = await openDocument('README.md')
+  if (root) {
+    readDocument(root)
+  } else {
+    statusEl.textContent = 'no documents found'
   }
-
-  statusEl.textContent = resumePoint > 0
-    ? `${nextTurn}/${turns.length} blocks | ${turns.length - nextTurn} remaining`
-    : `${turns.length} blocks | scroll down to begin`
-
-  // JIT pull loop — gap at tip triggers next block.
-  // A tip-pull during streaming skips the active animation (renders remaining
-  // tokens instantly) AND triggers the next block as usual.
-  let skipController: AbortController | null = null
-
-  while (nextTurn < turns.length) {
-    await waitForTipPull(viewport)
-
-    const turn = turns[nextTurn]
-    const { block, index } = timeline.addBlock(turn.role)
-    tracker.track(block.element, turn.sequenceId ?? block.id)
-
-    // Wire up skip: a tip-pull during streaming aborts the current animation
-    skipController = new AbortController()
-    const unsub = viewport.onTipPull(() => {
-      skipController?.abort()
-    })
-
-    // Stream one block — this is the live edge
-    await streamTokens(turn.tokens, block.element, index, timeline, {
-      tokensPerSecond: settings.pace,
-      skipSignal: skipController.signal,
-    })
-
-    unsub()
-    skipController = null
-    timeline.scaleBlock(block)
-    timeline.renderIfActive(index)
-
-    nextTurn++
-    viewport.unlockPull()
-
-    // Persist reading position
-    updateSessionPosition(session.readingSessionId, nextTurn).catch(() => {})
-
-    statusEl.textContent =
-      `${nextTurn}/${turns.length} blocks | ` +
-      `${turns.length - nextTurn} remaining`
-  }
-
-  statusEl.textContent = `${turns.length} blocks | complete`
 }
 
-function waitForTipPull(viewport: Viewport): Promise<void> {
-  return new Promise(resolve => {
+function waitForTipPull(viewport: Viewport, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) { reject(new DOMException('Aborted', 'AbortError')); return }
+
     const unsub = viewport.onTipPull(() => {
       unsub()
+      signal?.removeEventListener('abort', onAbort)
       resolve()
     })
+
+    function onAbort() {
+      unsub()
+      reject(new DOMException('Aborted', 'AbortError'))
+    }
+
+    signal?.addEventListener('abort', onAbort, { once: true })
   })
 }
 

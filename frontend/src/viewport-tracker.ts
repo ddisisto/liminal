@@ -8,8 +8,14 @@
  * (--attention: 0→1) for real-time visual feedback.
  */
 
-import type { SessionClient, ViewportEvent } from './session-client'
+import type { ViewportEvent } from './session-client'
 import { putAttentionBatch, getDocumentAttention, type AttentionRecord } from './store'
+
+/** Minimal interface for the tracker — doesn't require a full SessionClient. */
+export interface TrackerClient {
+  readingSessionId: string
+  sendViewportEvents(events: ViewportEvent[]): void
+}
 
 interface TrackedBlock {
   blockId: string
@@ -31,13 +37,13 @@ export class ViewportTracker {
   private observer: IntersectionObserver
   private pendingEvents: ViewportEvent[] = []
   private sessionId: string
-  private client: SessionClient
+  private client: TrackerClient
   private active = true  // false when tab/window is not focused
   private batchTimer: number
   private updateTimer: number
   private priorAttention: Map<number, number> = new Map()
 
-  constructor(client: SessionClient) {
+  constructor(client: TrackerClient) {
     this.client = client
     this.sessionId = client.readingSessionId
 
