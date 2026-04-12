@@ -25,12 +25,19 @@ export class Viewport {
   private pinchBaseScale = 1
   private _userScale = 1
   private pullIndicator: HTMLElement
+  private navEnd: HTMLElement | null = null
 
   constructor(scrollContainer: HTMLElement, timeline: Timeline, settings: Settings) {
     this.timeline = timeline
     this.settings = settings
     this.pullIndicator = this.createPullIndicator()
     this.setupScrollListener(scrollContainer)
+    this.setupGapClick()
+  }
+
+  /** Bind the nav-end button so it fades out as the gap opens. */
+  bindNavEnd(el: HTMLElement): void {
+    this.navEnd = el
   }
 
   /** Register for "user scrolled down at tip" events — the JIT pull signal. */
@@ -102,6 +109,11 @@ export class Viewport {
     } else {
       this.pullIndicator.style.opacity = String(progress * 0.6)
     }
+
+    // Fade nav-end button out as the gap opens up
+    if (this.navEnd) {
+      this.navEnd.style.opacity = String(1 - progress)
+    }
   }
 
   private setupScrollListener(scrollContainer: HTMLElement): void {
@@ -142,6 +154,26 @@ export class Viewport {
         this.pinchStartDist = 0
       }
     }, { passive: true })
+  }
+
+  /** Click/tap in the gap region acts as scroll-to-tip. */
+  private setupGapClick(): void {
+    document.addEventListener('click', (e) => {
+      const y = (e as MouseEvent).clientY
+      const inputArea = document.getElementById('input-area')
+      if (!inputArea) return
+
+      const inputTop = inputArea.getBoundingClientRect().top
+      const lastBlock = this.timeline.getBlock(this.timeline.length - 1)
+      const refBottom = lastBlock
+        ? lastBlock.element.getBoundingClientRect().bottom
+        : this.timeline.element.getBoundingClientRect().top
+
+      // Click is in the gap if it's below the last block and above the input
+      if (y > refBottom && y < inputTop) {
+        this.scrollToTip()
+      }
+    })
   }
 
   /** Allow the next pull to fire. Call after delivered content is ready. */

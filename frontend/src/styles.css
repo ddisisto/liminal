@@ -478,7 +478,10 @@ h1::after { bottom: 35%; }
 }
 
 #nav-top { top: 56px; }
-#nav-end { bottom: 80px; }
+#nav-end {
+  bottom: 80px;
+  transition: opacity 0.15s;
+}
 
 #status {
   position: fixed;

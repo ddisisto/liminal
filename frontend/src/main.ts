@@ -29,6 +29,8 @@ async function main() {
   const navTop = document.getElementById('nav-top')!
   const navEnd = document.getElementById('nav-end')!
 
+  viewport.bindNavEnd(navEnd)
+
   const jumpToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
   const jumpToEnd = () => viewport.scrollToTip()
 
