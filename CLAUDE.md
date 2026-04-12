@@ -4,7 +4,7 @@ An attention instrument. Tracks and visualises the reader's own attention patter
 
 ## Project State
 
-UX proof-of-concept live at ddisisto.github.io/liminal/. Core interaction loop working: JIT pull (scroll-down at tip = next paragraph), per-token streaming with skip-on-pull, block-length font scaling (short blocks are large/prominent, long blocks settle smaller), mobile touch/pinch-to-zoom, fixed auto-growing input area, raw/rendered markdown toggle, light/dark theme with system preference detection, scroll-driven hero title animation, navigation controls (Home/End keys, on-screen buttons). GitHub Pages auto-deploys from main.
+UX proof-of-concept live at ddisisto.github.io/liminal/. Core interaction loop working: fully pull-driven from first block (no buffered initial load), per-token streaming with skip-on-pull, block-length font scaling (short blocks are large/prominent, long blocks settle smaller), mobile touch/pinch-to-zoom, fixed auto-growing input area, blockquote rendering, settings panel (cog flyout: theme, markup, pace slider, gap slider with quadratic scaling), navigation controls (Home/End keys, on-screen buttons). GitHub Pages auto-deploys from main.
 
 Backend functional: FastAPI + SQLite + WebSocket. Session persistence, demo content seeding, viewport event ingestion. Frontend connects to backend when available, falls back to mock data for GitHub Pages. L1 attention capture live: viewport time tracking with IntersectionObserver, AFK gating, live visual feedback (--attention CSS property drives border warmth). Real inference not yet implemented (static content seeded from project docs).
 
@@ -66,6 +66,7 @@ frontend/src/
 - `docs/research/attention-instrumentation.md` — prior art and implementation priorities for attention capture
 - `docs/research/token-annotation-systems.md` — prior art for token visualization and annotation UX
 - `docs/ux-poc-design.md` — UX PoC requirements, cursor model, module architecture
+- `docs/ui-settings-control.md` — settings panel design, controls inventory, interaction spec
 
 ## Conventions
 

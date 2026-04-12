@@ -12,7 +12,7 @@ export class Settings {
   private open = false
 
   /** Tokens per second for streaming. */
-  pace = 60
+  pace = 33
   /** Gap position as fraction of viewport height (0 = top, 1 = bottom). */
   gap = 0.33
 
@@ -72,16 +72,21 @@ export class Settings {
     // Separator
     panel.appendChild(this.buildSeparator())
 
-    // Pace slider
-    panel.appendChild(this.buildSlider('Pace', 5, 300, this.pace, (v) => {
-      this.pace = v
-    }, (v) => `${v} tps`))
+    // Pace slider — quadratic: fine control at slow end
+    panel.appendChild(this.buildSlider({
+      label: 'Pace', min: 5, max: 300, initial: this.pace,
+      curve: (t) => t * t,
+      format: (v) => `${Math.round(v)} tps`,
+      onChange: (v) => { this.pace = Math.round(v) },
+    }))
 
-    // Gap slider
-    panel.appendChild(this.buildSlider('Gap', 0.05, 0.95, this.gap, (v) => {
-      this.gap = v
-      this.applyGap()
-    }, (v) => `${Math.round(v * 100)}%`))
+    // Gap slider — quadratic: fine control at small gap end
+    panel.appendChild(this.buildSlider({
+      label: 'Gap', min: 0.15, max: 0.66, initial: this.gap,
+      curve: (t) => t * t,
+      format: (v) => `${Math.round(v * 100)}%`,
+      onChange: (v) => { this.gap = v; this.applyGap() },
+    }))
 
     // Set initial CSS property
     this.applyGap()
@@ -126,14 +131,35 @@ export class Settings {
     return row
   }
 
-  private buildSlider(
-    label: string,
-    min: number,
-    max: number,
-    initial: number,
-    onChange: (value: number) => void,
-    format: (value: number) => string,
-  ): HTMLElement {
+  private buildSlider(opts: {
+    label: string
+    min: number
+    max: number
+    initial: number
+    onChange: (value: number) => void
+    format: (value: number) => string
+    /** Maps 0–1 to 0–1. Quadratic (t²) gives more resolution at the low end. */
+    curve?: (t: number) => number
+  }): HTMLElement {
+    const { label, min, max, initial, onChange, format, curve } = opts
+
+    // curve maps normalized 0–1 → 0–1, inverseCurve maps back
+    const apply = curve ?? ((t: number) => t)
+    const invert = curve
+      ? (t: number) => { // numerical inverse via binary search
+          let lo = 0, hi = 1
+          for (let i = 0; i < 20; i++) {
+            const mid = (lo + hi) / 2
+            if (apply(mid) < t) lo = mid; else hi = mid
+          }
+          return (lo + hi) / 2
+        }
+      : (t: number) => t
+
+    // Convert between slider position (0–1) and actual value
+    const toValue = (t: number) => min + apply(t) * (max - min)
+    const toSlider = (v: number) => invert((v - min) / (max - min))
+
     const row = document.createElement('div')
     row.className = 'settings-row settings-row--slider'
 
@@ -154,13 +180,13 @@ export class Settings {
     const input = document.createElement('input')
     input.type = 'range'
     input.className = 'settings-slider'
-    input.min = String(min)
-    input.max = String(max)
-    input.step = max >= 1 ? '1' : '0.01'
-    input.value = String(initial)
+    input.min = '0'
+    input.max = '1'
+    input.step = '0.005'
+    input.value = String(toSlider(initial))
 
     input.addEventListener('input', () => {
-      const v = parseFloat(input.value)
+      const v = toValue(parseFloat(input.value))
       valueEl.textContent = format(v)
       onChange(v)
     })
