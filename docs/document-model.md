@@ -130,6 +130,39 @@ The reader navigates the graph by following links within documents. There is no 
 
 **Intro as root**: the intro/hero remains pinned as the consistent entry point and reference. Every reading session starts here. The intro document is the root of the graph.
 
+### Delivery modes
+
+Three modes of block delivery, all using the same rendering pipeline:
+
+**Pull-driven** (default for first read): every block waits for a pull gesture. The reader controls pacing completely. New blocks stream with per-token animation. This is the core reading experience.
+
+**Resume** (default on revisit): blocks 0..lastPosition render instantly (no pull, no animation), restoring the reader to where they left off. Pull-driven delivery resumes from there. Previously-seen blocks carry their accumulated attention warmth from IndexedDB.
+
+**Open**: all blocks render immediately on document open. The reader can scroll and zoom the entire document freely from the start. Useful for reference, browsing, or re-reading. This is a per-document option, not a global mode change.
+
+The mode is stored per reading session. The session flyout and/or settings panel can expose it. A reasonable default: pull-driven for first read, resume on revisit, open available on demand.
+
+Implementation is a single check in the pull loop:
+
+```
+while (nextTurn < turns.length) {
+  if (mode === 'pull' || (mode === 'resume' && nextTurn >= lastPosition)) {
+    await waitForTipPull(viewport)
+  }
+  renderBlock(nextTurn, { animate: mode === 'pull' })
+}
+```
+
+### Unseen block state
+
+In resume and open modes, blocks beyond the reader's last known position render in a **dimmed, unseen state**:
+
+- **Visual**: reduced opacity, blue-tinted left border (distinct from the warm amber of attended blocks and the neutral border of seen-but-not-yet-warm blocks)
+- **Attention**: no attention is recorded until the block has been continuously visible in the viewport for **1.5 seconds** — preventing false positives from quick scroll-throughs. After the threshold, the block transitions to normal display and attention tracking begins.
+- **Transition**: on first real view, the block fades from dimmed to full opacity, border shifts from blue to the standard colour. This is the moment the block becomes "seen."
+
+This creates a clear visual map of reading progress: warm blocks (read and dwelt on), neutral blocks (seen), and dimmed blocks (present but unread). The reader can see the shape of an entire document while still having a clear sense of where their attention has actually been.
+
 ### Document types in the graph
 
 All document types are nodes in the same graph:
@@ -159,21 +192,23 @@ The document graph, combined with accumulated attention data, creates the substr
 
 ### Phase 1: Document reader (current priority)
 
-1. **Strip mock conversation wrapper** — load README as a real document. Blocks are paragraphs with role `content`, not simulated chat turns.
-2. **Link interception** — catch clicks on relative markdown links in rendered blocks, hot-load the target document from source.
-3. **Document switching** — save/restore reading position, swap timeline content, create reading sessions per document.
-4. **Session flyout** — minimal UI for open documents list with reading positions.
+1. **Strip mock conversation wrapper** — load README as a real document. Blocks are paragraphs with role `content`, not simulated chat turns. Drop fake user prompts.
+2. **Delivery modes** — implement pull/resume/open modes in the pull loop. Resume pre-loads blocks to last position. Open renders all blocks immediately.
+3. **Unseen block state** — dimmed + blue border for unread blocks. 1.5s viewport threshold before attention tracking begins. Transition animation on first real view.
+4. **Link interception** — catch clicks on relative markdown links in rendered blocks, hot-load the target document from source.
+5. **Document switching** — save/restore reading position, swap timeline content, create reading sessions per document.
+6. **Session flyout** — minimal UI for open documents list with reading positions. Auto-opens on switch.
 
 ### Phase 2: Document management
 
-5. **Import** — paste, file upload, URL fetch (client-side where CORS allows, backend when available).
-6. **Remove** — delete documents from IndexedDB.
+7. **Import** — paste, file upload, URL fetch (client-side where CORS allows, backend when available).
+8. **Remove** — delete documents from IndexedDB.
 
 ### Phase 3: Conversation (requires backend)
 
-7. **Inference connection** — backend streams tokens, frontend stores as live document.
-8. **Conversation fork** — start a chat from a content document, creating a linked node in the graph.
-9. **Session sync** — opt-in sync of documents and attention to backend.
+9. **Inference connection** — backend streams tokens, frontend stores as live document.
+10. **Conversation fork** — start a chat from a content document, creating a linked node in the graph.
+11. **Session sync** — opt-in sync of documents and attention to backend.
 
 ## Open questions
 
