@@ -65,7 +65,7 @@ frontend/src/
 - `README.md` — demo page intro content, self-hosted through the live demo
 - `docs/research/attention-instrumentation.md` — prior art and implementation priorities for attention capture
 - `docs/research/token-annotation-systems.md` — prior art for token visualization and annotation UX
-- `docs/ux-poc-design.md` — UX PoC requirements, cursor model, module architecture
+- `docs/document-model.md` — document/block/reading-session data model, IndexedDB + SQLite storage
 - `docs/ui-settings-control.md` — settings panel design, controls inventory, interaction spec
 
 ## Conventions
