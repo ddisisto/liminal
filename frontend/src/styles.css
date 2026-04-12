@@ -456,6 +456,29 @@ h1::after { bottom: 35%; }
   cursor: pointer;
 }
 
+.settings-reset {
+  width: 100%;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--fg-dim);
+  font-family: monospace;
+  font-size: 11px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.settings-reset:hover {
+  color: var(--fg-muted);
+  border-color: var(--border-mid);
+}
+
+.settings-reset--armed {
+  color: #c06050;
+  border-color: #c06050;
+}
+
 /* Navigation controls — right edge, thumb-friendly */
 .nav-btn {
   position: fixed;

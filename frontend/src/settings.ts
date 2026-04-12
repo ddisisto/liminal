@@ -100,7 +100,47 @@ export class Settings {
     // Set initial CSS property
     this.applyGap()
 
+    // Reset button
+    panel.appendChild(this.buildSeparator())
+    panel.appendChild(this.buildResetButton())
+
     return panel
+  }
+
+  private buildResetButton(): HTMLElement {
+    const btn = document.createElement('button')
+    btn.className = 'settings-reset'
+    btn.textContent = 'reset reading data'
+
+    let armed = false
+    let timer: number | undefined
+
+    btn.addEventListener('click', () => {
+      if (!armed) {
+        armed = true
+        btn.textContent = 'confirm reset'
+        btn.classList.add('settings-reset--armed')
+        // Disarm after 3s
+        timer = window.setTimeout(() => {
+          armed = false
+          btn.textContent = 'reset reading data'
+          btn.classList.remove('settings-reset--armed')
+        }, 3000)
+      } else {
+        clearTimeout(timer)
+        this.resetData()
+      }
+    })
+
+    return btn
+  }
+
+  private resetData(): void {
+    // Delete the IndexedDB database entirely
+    indexedDB.deleteDatabase('liminal')
+    // Scroll to top, then reload to re-import fresh
+    window.scrollTo(0, 0)
+    location.reload()
   }
 
   private buildPill(
