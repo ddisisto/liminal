@@ -40,7 +40,9 @@ schema/
 └── init.sql             # Sessions, sequences, tokens, viewport_events, annotations
 
 frontend/src/
-├── main.ts              # Entry point, JIT pull loop, hero animation, render toggle, nav
+├── main.ts              # Entry point, JIT pull loop, hero animation, nav
+├── settings.ts          # Settings panel — cog flyout, theme/markup/pace controls
+├── styles.css           # All CSS (extracted from index.html)
 ├── session-client.ts    # Backend connection, text import, mock fallback
 ├── viewport-tracker.ts  # L1 attention: IntersectionObserver, --attention CSS property
 ├── cursor.ts            # Reading position, movement, tip detection, change events

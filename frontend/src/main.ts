@@ -5,9 +5,11 @@
  * occupy is scrolled into view. One pull = one turn.
  */
 
+import './styles.css'
 import { Timeline } from './timeline'
 import { Viewport } from './viewport'
 import { InputArea } from './input'
+import { Settings } from './settings'
 import { streamTokens } from './stream'
 import { connect } from './session-client'
 import { ViewportTracker } from './viewport-tracker'
@@ -17,27 +19,9 @@ async function main() {
 
   const timelineEl = document.getElementById('timeline')!
   const statusEl = document.getElementById('status')!
-  const renderBtn = document.getElementById('render-toggle')!
-  const themeBtn = document.getElementById('theme-toggle')!
 
   const timeline = new Timeline(timelineEl)
-
-  // Sync theme button label with initial state (may have been set by inline script)
-  const isLight = document.documentElement.getAttribute('data-theme') === 'light'
-  themeBtn.textContent = isLight ? 'light' : 'dark'
-
-  themeBtn.addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-theme')
-    const next = current === 'light' ? 'dark' : 'light'
-    document.documentElement.setAttribute('data-theme', next)
-    themeBtn.textContent = next
-  })
-
-  renderBtn.addEventListener('click', () => {
-    const next = !timeline.rendered
-    timeline.setRendered(next)
-    renderBtn.textContent = next ? 'rendered' : 'raw'
-  })
+  const _settings = new Settings(timeline)
 
   const viewport = new Viewport(document.documentElement, timeline)
 
