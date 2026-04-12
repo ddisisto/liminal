@@ -11,6 +11,8 @@ export class Settings {
   private cog: HTMLButtonElement
   private open = false
 
+  private static STORAGE_KEY = 'liminal-settings'
+
   /** Tokens per second for streaming. */
   pace = 33
   /** Gap position as fraction of viewport height (0 = top, 1 = bottom). */
@@ -18,6 +20,7 @@ export class Settings {
 
   constructor(timeline: Timeline) {
     this.timeline = timeline
+    this.restore()
     this.cog = this.buildCog()
     this.panel = this.buildPanel()
     document.body.appendChild(this.cog)
@@ -65,7 +68,7 @@ export class Settings {
 
     toggleRow.appendChild(this.buildPill(['dark', 'light'],
       this.theme === 'light' ? 1 : 0,
-      (i) => this.applyTheme(i === 1 ? 'light' : 'dark'),
+      (i) => { this.applyTheme(i === 1 ? 'light' : 'dark'); this.save() },
     ))
 
     toggleRow.appendChild(this.buildPill(['raw', 'rich'],
@@ -83,7 +86,7 @@ export class Settings {
       label: 'Pace', min: 5, max: 300, initial: this.pace,
       curve: (t) => t * t,
       format: (v) => `${Math.round(v)} tps`,
-      onChange: (v) => { this.pace = Math.round(v) },
+      onChange: (v) => { this.pace = Math.round(v); this.save() },
     }))
 
     // Gap slider — quadratic: fine control at small gap end
@@ -91,7 +94,7 @@ export class Settings {
       label: 'Gap', min: 0.15, max: 0.66, initial: this.gap,
       curve: (t) => t * t,
       format: (v) => `${Math.round(v * 100)}%`,
-      onChange: (v) => { this.gap = v; this.applyGap() },
+      onChange: (v) => { this.gap = v; this.applyGap(); this.save() },
     }))
 
     // Set initial CSS property
@@ -207,5 +210,22 @@ export class Settings {
   get theme(): 'dark' | 'light' {
     return document.documentElement.getAttribute('data-theme') === 'light'
       ? 'light' : 'dark'
+  }
+
+  private save(): void {
+    const data = { pace: this.pace, gap: this.gap, theme: this.theme }
+    try { localStorage.setItem(Settings.STORAGE_KEY, JSON.stringify(data)) }
+    catch { /* storage full or unavailable — silently skip */ }
+  }
+
+  private restore(): void {
+    try {
+      const raw = localStorage.getItem(Settings.STORAGE_KEY)
+      if (!raw) return
+      const data = JSON.parse(raw)
+      if (typeof data.pace === 'number') this.pace = data.pace
+      if (typeof data.gap === 'number') this.gap = data.gap
+      if (data.theme === 'light' || data.theme === 'dark') this.applyTheme(data.theme)
+    } catch { /* corrupt or unavailable — use defaults */ }
   }
 }
