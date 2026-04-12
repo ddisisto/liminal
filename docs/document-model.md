@@ -116,7 +116,31 @@ The backend is required for:
 
 Already implemented. Pace, gap, theme. These are reader preferences, not document data.
 
-## How chat fits
+## The document graph
+
+Documents are not isolated — they form a graph through links. A markdown document that links to `docs/architecture-plan.md` creates an edge in the graph. Following that link opens the target as another document in the reader's collection.
+
+### Navigation model
+
+The reader navigates the graph by following links within documents. There is no separate "library" or "file browser" — the documents themselves are the navigation surface. The intro document (README) is the root node.
+
+**Link follow**: clicking a relative link in a rendered document hot-loads the target. The current document's reading position is saved; the new document opens in the timeline. If the target is already in IndexedDB, it loads instantly with prior attention restored.
+
+**Session flyout**: a small panel showing the reader's open documents with reading positions. Auto-opens briefly on document switch (showing where you are in each), then collapses to allow reading. Same interaction pattern as the settings cog — minimal, out of the way, available on demand.
+
+**Intro as root**: the intro/hero remains pinned as the consistent entry point and reference. Every reading session starts here. The intro document is the root of the graph.
+
+### Document types in the graph
+
+All document types are nodes in the same graph:
+
+- **Content documents**: imported text, fetched URLs, uploaded files. Blocks have role `content`.
+- **Conversations**: blocks alternate `user`/`assistant` roles. The document is live (blocks appended via inference). A conversation may fork from a content document — "let's discuss this" creates a new document linked to the source.
+- **Annotations/reflections**: future. Documents created by the reader in response to other documents.
+
+The graph is navigable in all directions. A conversation that references a source document links back to it. An annotation on a passage links to the block it annotates.
+
+### How chat fits
 
 A chat is a document where:
 - Source type is `chat`
@@ -125,12 +149,35 @@ A chat is a document where:
 - The reading session and authoring session are the same object
 - Pull-driven delivery still applies: model output streams into blocks as the reader pulls
 
-The only difference between reading and chat is whether new blocks come from stored content or from inference. The attention model, pull mechanics, and persistence are identical.
+The only difference between reading and chat is whether new blocks come from stored content or from inference. The attention model, pull mechanics, and persistence are identical. Conversations are deferred until backend inference is connected.
+
+### Future: reflective layer
+
+The document graph, combined with accumulated attention data, creates the substrate for a reflective RAG layer. The reader's attention patterns across documents — what they lingered on, what they linked between, what they returned to — form a semantic index that no external system has access to. A model with access to this index could surface connections, suggest revisitations, or generate reflections grounded in what the reader actually engaged with. This is speculative but architecturally straightforward: the data is already being captured, the graph structure already exists, the model just needs to read it.
+
+## Implementation plan
+
+### Phase 1: Document reader (current priority)
+
+1. **Strip mock conversation wrapper** — load README as a real document. Blocks are paragraphs with role `content`, not simulated chat turns.
+2. **Link interception** — catch clicks on relative markdown links in rendered blocks, hot-load the target document from source.
+3. **Document switching** — save/restore reading position, swap timeline content, create reading sessions per document.
+4. **Session flyout** — minimal UI for open documents list with reading positions.
+
+### Phase 2: Document management
+
+5. **Import** — paste, file upload, URL fetch (client-side where CORS allows, backend when available).
+6. **Remove** — delete documents from IndexedDB.
+
+### Phase 3: Conversation (requires backend)
+
+7. **Inference connection** — backend streams tokens, frontend stores as live document.
+8. **Conversation fork** — start a chat from a content document, creating a linked node in the graph.
+9. **Session sync** — opt-in sync of documents and attention to backend.
 
 ## Open questions
 
-- **Resumption UX**: when returning to a document, jump to last position? Show attention heatmap? Both?
-- **Document discovery**: how does the reader find/list their documents? Library view? Recent list?
 - **Import chunking**: how to split a long text into blocks? By paragraph? By heading? Configurable?
 - **Identity and dedup**: if the same URL is imported twice, is it one document or two? Content hash helps but source text may change.
+- **Cross-document attention**: does reading doc A while thinking about doc B create a signal? Only explicit links capture this currently.
 - **Offline chat**: could inference run locally (WASM models, WebGPU)? Would make chat fully offline too.

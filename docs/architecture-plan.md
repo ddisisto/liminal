@@ -161,6 +161,8 @@ Sparse, high-signal. The user's deliberate marks on token ranges.
 
 **Chat flow**: User input → backend tokenises and stores as user block → inference runs on local model or API → tokens stream over WebSocket with metadata → frontend renders per-token, persists to IndexedDB, backend persists to SQLite → reading session and chat session are the same object.
 
+**Navigation flow**: Reader follows a link in a document → current position saved to reading session in IndexedDB → target document loaded (from IndexedDB if previously visited, from source if new) → new reading session created → timeline swaps to new content with prior attention restored → session flyout opens briefly showing open documents.
+
 **Attention flow (L1)**: Frontend tracks block viewport visibility via IntersectionObserver, gated by `visibilitychange`/`blur` for AFK detection → per-block cumulative viewport time maintained live as `--attention` CSS custom property (0→1), driving visual warmth → attention data persists to IndexedDB → opt-in sync to backend via batched POST. No processing, no summarisation, no feedback to the model (yet).
 
 **Annotation flow**: User deliberately selects and tags → stored locally in IndexedDB → optionally synced to backend → rendered as a subtle overlay on the document.
@@ -212,12 +214,14 @@ See CLAUDE.md for the canonical module map. Key architectural boundaries:
 
 1. ~~**Research survey**~~ — done: attention instrumentation, token annotation systems.
 2. ~~**Layer 0–1 prototype**~~ — done: pull-driven delivery, per-token rendering, viewport-time attention capture with live visual feedback, settings panel with persistence.
-3. **Document model + IndexedDB** — implement the frontend storage layer. Documents, blocks, reading sessions, attention in IndexedDB. Offline-capable reader for imported content (paste, file, URL).
-4. **Backend alignment** — refactor backend schema and API from session-centric to document-centric. Backend becomes sync layer for shared documents and inference.
-5. **Real inference** — local model loading (HF Transformers), token metadata extraction (logprob, entropy, surprisal), API provider fallback. Chat as a live document.
-6. **Layer 2–3 build** — annotation interface, entropy/surprisal overlay.
-7. **Layer 4 exploration** — inline expansion and compression.
-8. **User-model research** — analyse accumulated attention data, design the third predictive system.
+3. ~~**Document model + IndexedDB**~~ — done: frontend storage layer with documents, blocks, reading sessions, attention in IndexedDB. Settings persist to localStorage.
+4. **Document reader** — strip mock conversation, load documents as content blocks. Link interception for graph navigation between documents. Session flyout for switching. See [document-model.md](document-model.md#implementation-plan) for detailed plan.
+5. **Document management** — import (paste, file, URL), remove. The reader builds their own document collection.
+6. **Conversations** — connect backend inference, chat as a live document type. Conversation fork from content documents. Session sync.
+7. **Layer 2–3 build** — annotation interface, entropy/surprisal overlay.
+8. **Layer 4 exploration** — inline expansion and compression.
+9. **Reflective layer** — RAG over the reader's document graph and attention history. Surface connections, suggest revisitations, generate reflections.
+10. **User-model research** — analyse accumulated attention data, design the third predictive system.
 
 ---
 

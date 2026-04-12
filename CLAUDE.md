@@ -4,27 +4,30 @@ An attention instrument. Tracks and visualises the reader's own attention patter
 
 ## Project State
 
-UX proof-of-concept live at ddisisto.github.io/liminal/. Core interaction loop working: fully pull-driven from first block (no buffered initial load), per-token streaming with skip-on-pull, block-length font scaling (short blocks are large/prominent, long blocks settle smaller), mobile touch/pinch-to-zoom, fixed auto-growing input area, blockquote rendering, settings panel (cog flyout: theme, markup, pace slider, gap slider with quadratic scaling), navigation controls (Home/End keys, on-screen buttons). GitHub Pages auto-deploys from main.
+Live at ddisisto.github.io/liminal/. Core reading loop: fully pull-driven from first block, per-token streaming with skip-on-pull, block-length font scaling, mobile touch/pinch-to-zoom, settings panel (cog flyout: theme, markup, pace/gap sliders with quadratic scaling), nav controls. GitHub Pages auto-deploys from main.
 
-Backend functional: FastAPI + SQLite + WebSocket. Session persistence, demo content seeding, viewport event ingestion. Frontend connects to backend when available, falls back to mock data for GitHub Pages. L1 attention capture live: viewport time tracking with IntersectionObserver, AFK gating, live visual feedback (--attention CSS property drives border warmth). Real inference not yet implemented (static content seeded from project docs).
+IndexedDB storage layer implemented: documents, blocks, reading sessions, attention all persist locally. Settings persist to localStorage. Mock data imports once then loads from IndexedDB on subsequent visits. Attention warmth carries across page loads.
 
-Branch `reading-instrument` has work-in-progress: text import (paste/file/URL via `?url=` and `?source=local`), block indexing (DOM ids, hash navigation), vh-based pull threshold, hero title unified into timeline as first block.
+Backend functional but not actively used: FastAPI + SQLite + WebSocket. Will become sync layer and inference host when conversations are implemented. L1 attention capture live: viewport time tracking with IntersectionObserver, AFK gating, live visual feedback (--attention CSS property drives border warmth), persisted to IndexedDB.
+
+Next milestone: transition from mock conversation to document reader. Documents form a navigable graph through links. The self-hosted demo becomes an instrumented browser of the project's own docs. Conversations (via backend inference) become a document type in the same graph.
 
 ## Key Concepts
 
 - **Attention ownership**: Attention data belongs to the reader. Captured locally, stored locally, never transmitted without consent. The reader benefits directly — visible reading history reduces cognitive load on revisitation. Sharing is opt-in: to authors, communities, or models.
 - **JIT pull**: Content is pulled by the reader, not pushed. The pull gesture ("I'm ready for more") and its timing are the primary attention signal. Works for any content source — static text, uploaded documents, or model inference.
 - **Text as temporal medium**: Every token has a birth moment, metabolic state (entropy/surprisal), and attention history. Per-token addressability is non-negotiable — each token is a discrete DOM element with data attributes.
-- **Buffered vs streaming**: History/initial load renders instantly (per-token spans, no animation). Live edge streams per-token with animation. The distinction maps to SQLite reads vs WebSocket inference.
+- **Document graph**: Documents link to each other, forming a navigable graph. Following a link hot-loads the target. Conversations fork from content documents. The graph is the navigation — no separate file browser needed.
+- **Buffered vs streaming**: Stored documents render instantly (per-token spans, no animation). Live edge (chat) streams per-token with animation. The distinction maps to IndexedDB reads vs WebSocket inference.
 - **Layer model**: L0 (pull-driven pacing), L1 (attention capture from viewport time + pull cadence), L2 (annotation/tagging), L3 (entropy/surprisal overlays), L4 (semantic zoom), L5 (user model), L6 (adaptive phase boundary). L0-1 implemented.
-- **Sequence immutability**: Once tokens are written, they are never modified. All editing is branching.
+- **Document immutability**: Once tokens are written, they are never modified. All editing is branching.
 - **Viewport time as attention**: The L1 signal is simply "was this block in the viewport, and for how long." No imputed intent. AFK gating via visibilitychange/blur. Cumulative time drives live visual warmth and is persisted for later analysis.
 
 ## Architecture
 
-- **Backend**: Python, FastAPI, WebSocket, SQLite (WAL mode, raw SQL), session management, viewport event ingestion
-- **Frontend**: TypeScript, Vite, native browser APIs, IntersectionObserver for attention
-- **Inference**: Deferred — currently static content seeded from docs. Future: HuggingFace Transformers (local GPU), API fallback
+- **Frontend**: TypeScript, Vite, IndexedDB (primary store), native browser APIs, IntersectionObserver for attention
+- **Backend**: Python, FastAPI, WebSocket, SQLite (sync layer, inference host)
+- **Inference**: Deferred — currently static content from docs. Future: HuggingFace Transformers (local GPU), API fallback
 - **Hardware target**: NVIDIA GTX 1070, 8GB VRAM
 
 ## Module Map
@@ -41,12 +44,12 @@ schema/
 
 frontend/src/
 ├── main.ts              # Entry point, JIT pull loop, hero animation, nav
+├── store.ts             # IndexedDB — documents, blocks, reading sessions, attention
 ├── settings.ts          # Settings panel — cog flyout, theme/markup/pace controls
 ├── styles.css           # All CSS (extracted from index.html)
-├── session-client.ts    # Backend connection, text import, mock fallback
-├── viewport-tracker.ts  # L1 attention: IntersectionObserver, --attention CSS property
-├── cursor.ts            # Reading position, movement, tip detection, change events
-├── viewport.ts          # Follows cursor, scroll/touch/pinch detection, tip pull events
+├── session-client.ts    # Document loading: backend → IndexedDB → mock import
+├── viewport-tracker.ts  # L1 attention: IntersectionObserver, --attention CSS property, IndexedDB persist
+├── viewport.ts          # Scroll/touch/pinch detection, gap pull, nav-end fade
 ├── token-renderer.ts    # Per-token <span> creation, animation, data attributes
 ├── stream.ts            # Live token consumer with skip signal
 ├── timeline.ts          # Block sequence, block-length scaling, buffered/rendered modes
@@ -77,12 +80,12 @@ frontend/src/
 
 ## Current Priorities
 
-1. Session management: upload docs, start chat sessions, manage session data
-2. Merge `reading-instrument` branch: text import, block indexing, hero-in-timeline
-3. Within and cross-session links, session data views
-4. Real inference: local model loading, token metadata extraction, API fallback
-5. Scrollback visual state (ambient dimming, temporal distance indicators)
-6. Layer 2-3: annotation interface, entropy/surprisal overlays
+1. Document reader: strip mock conversation, load docs as content blocks, link interception for graph navigation
+2. Session flyout: open documents list with reading positions, auto-opens on switch
+3. Document management: import (paste, file, URL), remove
+4. Conversations: connect backend inference, chat as live document, conversation fork from content
+5. Layer 2-3: annotation interface, entropy/surprisal overlays
+6. Reflective layer: RAG over document graph and attention history
 
 ## Dev Environment
 
@@ -90,5 +93,5 @@ frontend/src/
 - Backend: `uvicorn backend.main:app --reload --port 8000`
 - Frontend: `npm install`, `npx vite` for dev server on port 3000
 - SQLite DB auto-creates at `data/liminal.db` on backend startup
-- Frontend works without backend (falls back to mock data for GitHub Pages)
+- Frontend works without backend (IndexedDB primary, mock data import on first load)
 - Vite config at root, frontend source in `frontend/`
