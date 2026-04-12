@@ -106,9 +106,6 @@ async function main() {
     // Set up attention tracking
     tracker = new ViewportTracker({
       readingSessionId,
-      documentId: doc.documentId,
-      isLive: false,
-      turns: [],
       sendViewportEvents() {},
     })
     await tracker.loadPriorAttention(doc.documentId)
@@ -121,7 +118,7 @@ async function main() {
       for (let i = 0; i < resumePoint; i++) {
         const turn = turns[i]
         const { block, index } = timeline.addBlock(turn.role)
-        tracker.track(block.element, block.id)
+        tracker.track(block.element, block.id, true)  // seen: resumed blocks
         timeline.renderBuffered(index, turn.tokens, turn.text)
         timeline.renderIfActive(index)
       }

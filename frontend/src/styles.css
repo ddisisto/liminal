@@ -23,6 +23,8 @@
   --fg-heading: #909098;
   --border-focus: #2a2a45;
   --border-attn: #6a5030;   /* warm amber — attention target */
+  --border-unseen: #2a3a5a; /* blue tint — unseen blocks */
+  --fg-unseen: 0.4;         /* opacity for unseen blocks */
 }
 
 [data-theme="light"] {
@@ -45,6 +47,8 @@
   --fg-heading: #4a4a52;
   --border-focus: #a0a0b8;
   --border-attn: #c09050;   /* warm amber for light theme */
+  --border-unseen: #7090c0; /* blue tint — unseen blocks */
+  --fg-unseen: 0.45;        /* opacity for unseen blocks */
 }
 
 body {
@@ -141,6 +145,22 @@ body {
   );
   padding-left: 12px;
   color: var(--fg-user);
+}
+
+/* Unseen: never crossed visibility threshold — dim + blue border */
+.block--unseen {
+  opacity: var(--fg-unseen);
+  border-left-color: var(--border-unseen) !important;
+}
+
+.block--unseen.block--user {
+  color: color-mix(in oklch, var(--fg-user), var(--border-unseen) 40%);
+}
+
+/* Currently in viewport and being tracked */
+.block--in-viewport {
+  border-left-width: 3px;
+  padding-left: 11px;  /* compensate for wider border */
 }
 
 .token {

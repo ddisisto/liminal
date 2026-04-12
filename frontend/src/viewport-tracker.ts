@@ -25,12 +25,15 @@ interface TrackedBlock {
   totalMs: number              // cumulative viewport time
   visits: number               // times scrolled back to this block
   dirty: boolean               // needs persisting to IndexedDB
+  seen: boolean                // has crossed the visibility threshold
+  seenAccum: number            // ms accumulated toward the seen threshold (across visibility gaps)
 }
 
 const BATCH_INTERVAL_MS = 5000
 const MIN_DURATION_MS = 200     // ignore sub-200ms flickers
 const WARM_THRESHOLD_MS = 30000 // 30s of viewport time = fully "warm" (--attention: 1)
 const UPDATE_INTERVAL_MS = 500  // how often to update live attention values
+const SEEN_THRESHOLD_MS = 1500  // 1.5s continuous visibility before block counts as "seen"
 
 export class ViewportTracker {
   private blocks: TrackedBlock[] = []
@@ -74,13 +77,23 @@ export class ViewportTracker {
     window.addEventListener('beforeunload', () => this.flush())
   }
 
-  /** Start tracking a block element. Call when a block is added to the timeline. */
-  track(element: HTMLElement, blockId: string): void {
+  /**
+   * Start tracking a block element. Call when a block is added to the timeline.
+   * @param seen - true for resumed blocks that the reader has already seen
+   */
+  track(element: HTMLElement, blockId: string, seen = false): void {
     const blockIndex = this.blocks.length
     const priorMs = this.priorAttention.get(blockIndex) ?? 0
-    const block: TrackedBlock = { blockId, blockIndex, element, visibleSince: null, totalMs: priorMs, visits: 0, dirty: false }
+    const hasPrior = priorMs > 0
+    const isSeen = seen || hasPrior
+    const block: TrackedBlock = {
+      blockId, blockIndex, element, visibleSince: null,
+      totalMs: priorMs, visits: 0, dirty: false,
+      seen: isSeen, seenAccum: isSeen ? SEEN_THRESHOLD_MS : 0,
+    }
     const attention = Math.min(1, priorMs / WARM_THRESHOLD_MS)
     element.style.setProperty('--attention', attention.toFixed(3))
+    if (!isSeen) element.classList.add('block--unseen')
     this.blocks.push(block)
     this.observer.observe(element)
   }
@@ -101,6 +114,7 @@ export class ViewportTracker {
 
       if (entry.isIntersecting && this.active) {
         // Entered viewport
+        block.element.classList.add('block--in-viewport')
         if (block.visibleSince === null) {
           block.visibleSince = now
           block.visits++
@@ -108,20 +122,37 @@ export class ViewportTracker {
         }
       } else {
         // Left viewport (or tab went inactive)
+        block.element.classList.remove('block--in-viewport')
         this.closeInterval(block, now)
       }
     }
   }
 
-  /** Update --attention on all currently-visible blocks. */
+  /** Update --attention on all currently-visible blocks, handle unseen→seen transitions. */
   private updateLiveAttention(): void {
     if (!this.active) return
     const now = Date.now()
     for (const block of this.blocks) {
-      let total = block.totalMs
-      if (block.visibleSince !== null) {
-        total += now - block.visibleSince
+      if (block.visibleSince === null) continue
+      const elapsed = now - block.visibleSince
+
+      // Unseen→seen transition: accumulate toward threshold
+      if (!block.seen) {
+        const currentAccum = block.seenAccum + elapsed
+        if (currentAccum >= SEEN_THRESHOLD_MS) {
+          block.seen = true
+          block.element.classList.remove('block--unseen')
+          // Start attention from the overflow past the threshold
+          const overflow = currentAccum - SEEN_THRESHOLD_MS
+          block.totalMs = overflow
+          block.visibleSince = now
+          block.dirty = true
+        }
+        // Don't update --attention until seen
+        continue
       }
+
+      const total = block.totalMs + elapsed
       const attention = Math.min(1, total / WARM_THRESHOLD_MS)
       block.element.style.setProperty('--attention', attention.toFixed(3))
     }
@@ -130,8 +161,23 @@ export class ViewportTracker {
   private closeInterval(block: TrackedBlock, now: number): void {
     if (block.visibleSince === null) return
     const duration = now - block.visibleSince
-    block.totalMs += duration
     block.visibleSince = null
+
+    // Unseen blocks: accumulate toward seen threshold but don't record attention
+    if (!block.seen) {
+      block.seenAccum += duration
+      if (block.seenAccum >= SEEN_THRESHOLD_MS) {
+        block.seen = true
+        block.element.classList.remove('block--unseen')
+        // Credit overflow as attention
+        const overflow = block.seenAccum - SEEN_THRESHOLD_MS
+        block.totalMs = overflow
+        block.dirty = true
+      }
+      return
+    }
+
+    block.totalMs += duration
     block.dirty = true
 
     // Update CSS immediately on close
@@ -170,8 +216,13 @@ export class ViewportTracker {
       const rect = block.element.getBoundingClientRect()
       const viewportHeight = window.innerHeight
       const isVisible = rect.bottom > 0 && rect.top < viewportHeight
-      if (isVisible && block.visibleSince === null) {
-        block.visibleSince = now
+      if (isVisible) {
+        block.element.classList.add('block--in-viewport')
+        if (block.visibleSince === null) {
+          block.visibleSince = now
+        }
+      } else {
+        block.element.classList.remove('block--in-viewport')
       }
     }
   }
