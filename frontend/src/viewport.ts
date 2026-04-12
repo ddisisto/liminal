@@ -51,7 +51,7 @@ export class Viewport {
 
     const blockRect = lastBlock.element.getBoundingClientRect()
     const viewportHeight = window.innerHeight
-    const targetOffsetFromTop = Math.floor(viewportHeight * this.settings.tipPosition)
+    const targetOffsetFromTop = Math.floor(viewportHeight * (1 - this.settings.gap))
     const scrollDelta = blockRect.bottom - targetOffsetFromTop
 
     if (scrollDelta > 0) {
@@ -65,7 +65,7 @@ export class Viewport {
    * is within the viewport). Returns 0 if in scrollback.
    */
   private pullGapThreshold(): number {
-    return Math.max(80, window.innerHeight * this.settings.pullThreshold)
+    return Math.max(80, window.innerHeight * this.settings.gap)
   }
 
   private measureGap(): number {

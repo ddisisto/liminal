@@ -13,10 +13,8 @@ export class Settings {
 
   /** Tokens per second for streaming. */
   pace = 60
-  /** Where new content lands in viewport (0 = top, 1 = bottom). */
-  tipPosition = 0.67
-  /** Pull threshold as fraction of viewport height. */
-  pullThreshold = 0.2
+  /** Gap position as fraction of viewport height (0 = top, 1 = bottom). */
+  gap = 0.33
 
   constructor(timeline: Timeline) {
     this.timeline = timeline
@@ -79,15 +77,14 @@ export class Settings {
       this.pace = v
     }, (v) => `${v} tps`))
 
-    // Tip position slider
-    panel.appendChild(this.buildSlider('Tip position', 0.2, 0.9, this.tipPosition, (v) => {
-      this.tipPosition = v
+    // Gap slider
+    panel.appendChild(this.buildSlider('Gap', 0.05, 0.95, this.gap, (v) => {
+      this.gap = v
+      this.applyGap()
     }, (v) => `${Math.round(v * 100)}%`))
 
-    // Pull threshold slider
-    panel.appendChild(this.buildSlider('Pull threshold', 0.05, 0.5, this.pullThreshold, (v) => {
-      this.pullThreshold = v
-    }, (v) => `${Math.round(v * 100)}%`))
+    // Set initial CSS property
+    this.applyGap()
 
     return panel
   }
@@ -177,6 +174,10 @@ export class Settings {
     const sep = document.createElement('div')
     sep.className = 'settings-separator'
     return sep
+  }
+
+  private applyGap(): void {
+    document.documentElement.style.setProperty('--gap', String(Math.round(this.gap * 100)))
   }
 
   private applyTheme(theme: 'dark' | 'light'): void {

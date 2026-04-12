@@ -66,7 +66,7 @@ body {
 /* Extra space below content so the tip can sit at 2/3 viewport height,
    plus room for the fixed input area */
 #timeline {
-  padding-bottom: calc(33vh + 60px);
+  padding-bottom: calc(var(--gap, 33) * 1vh + 160px);
 }
 
 h1 {
