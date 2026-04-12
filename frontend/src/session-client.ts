@@ -11,7 +11,7 @@ import type { TokenData } from './types'
 import type { BlockRole } from './types'
 import {
   getDocument, putDocument, getBlocks, putBlocks,
-  putReadingSession,
+  putReadingSession, getLatestSession,
   type StoredDocument, type StoredBlock, type ReadingSession,
 } from './store'
 
@@ -29,6 +29,8 @@ export interface SessionClient {
   documentId: string
   /** Reading session ID. */
   readingSessionId: string
+  /** Last block position from a prior reading session (0 = fresh read). */
+  lastPosition: number
   /** Whether this is a live backend connection. */
   isLive: boolean
   /** Send viewport events (no-op for mock/stored). */
@@ -90,6 +92,7 @@ async function tryWebSocket(): Promise<SessionClient | null> {
       turns,
       documentId: sessionId,
       readingSessionId,
+      lastPosition: 0,
       isLive: true,
       sendViewportEvents(events: ViewportEvent[]) {
         fetch(`${API_URL}/viewport-events`, {
@@ -115,6 +118,10 @@ async function tryStored(): Promise<SessionClient | null> {
   const blocks = await getBlocks(MOCK_DOC_ID)
   if (blocks.length === 0) return null
 
+  // Check for prior reading position
+  const priorSession = await getLatestSession(MOCK_DOC_ID)
+  const lastPosition = priorSession?.position ?? 0
+
   const turns: Turn[] = blocks.map(b => ({
     role: b.role as BlockRole,
     tokens: b.tokens.map(t => ({
@@ -132,14 +139,15 @@ async function tryStored(): Promise<SessionClient | null> {
     docId: MOCK_DOC_ID,
     started: Date.now(),
     lastActive: Date.now(),
-    position: 0,
+    position: lastPosition,
   })
 
-  console.log(`[liminal] loaded from IndexedDB: ${blocks.length} blocks`)
+  console.log(`[liminal] loaded from IndexedDB: ${blocks.length} blocks, resuming from ${lastPosition}`)
   return {
     turns,
     documentId: MOCK_DOC_ID,
     readingSessionId,
+    lastPosition,
     isLive: false,
     sendViewportEvents() {},
   }
@@ -191,6 +199,7 @@ async function importContent(): Promise<SessionClient> {
     })),
     documentId: MOCK_DOC_ID,
     readingSessionId,
+    lastPosition: 0,
     isLive: false,
     sendViewportEvents() {},
   }

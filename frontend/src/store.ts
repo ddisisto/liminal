@@ -167,6 +167,25 @@ export async function getSessionsForDoc(docId: string): Promise<ReadingSession[]
   return req(index.getAll(docId))
 }
 
+/** Update position and lastActive on an existing reading session. */
+export async function updateSessionPosition(id: string, position: number): Promise<void> {
+  const session = await getReadingSession(id)
+  if (!session) return
+  session.position = position
+  session.lastActive = Date.now()
+  await putReadingSession(session)
+}
+
+/**
+ * Get the most recent reading session for a document.
+ * Returns the session with the highest lastActive timestamp, or undefined.
+ */
+export async function getLatestSession(docId: string): Promise<ReadingSession | undefined> {
+  const sessions = await getSessionsForDoc(docId)
+  if (sessions.length === 0) return undefined
+  return sessions.reduce((a, b) => a.lastActive > b.lastActive ? a : b)
+}
+
 // ── Attention ──────────────────────────────────────────────
 
 export async function putAttention(record: AttentionRecord): Promise<void> {

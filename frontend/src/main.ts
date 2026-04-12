@@ -13,6 +13,7 @@ import { Settings } from './settings'
 import { streamTokens } from './stream'
 import { connect } from './session-client'
 import { ViewportTracker } from './viewport-tracker'
+import { updateSessionPosition } from './store'
 
 async function main() {
   await document.fonts.ready
@@ -97,8 +98,23 @@ async function main() {
   const turns = session.turns
   let nextTurn = 0
 
-  statusEl.textContent =
-    `${turns.length} blocks | scroll down to begin`
+  // Resume mode: render previously-seen blocks instantly (no pull, no animation)
+  const resumePoint = Math.min(session.lastPosition, turns.length)
+  if (resumePoint > 0) {
+    for (let i = 0; i < resumePoint; i++) {
+      const turn = turns[i]
+      const { block, index } = timeline.addBlock(turn.role)
+      tracker.track(block.element, turn.sequenceId ?? block.id)
+      timeline.renderBuffered(index, turn.tokens, turn.text)
+      timeline.renderIfActive(index)
+    }
+    nextTurn = resumePoint
+    console.log(`[liminal] resumed: ${resumePoint} blocks rendered instantly`)
+  }
+
+  statusEl.textContent = resumePoint > 0
+    ? `${nextTurn}/${turns.length} blocks | ${turns.length - nextTurn} remaining`
+    : `${turns.length} blocks | scroll down to begin`
 
   // JIT pull loop — gap at tip triggers next block.
   // A tip-pull during streaming skips the active animation (renders remaining
@@ -131,6 +147,10 @@ async function main() {
 
     nextTurn++
     viewport.unlockPull()
+
+    // Persist reading position
+    updateSessionPosition(session.readingSessionId, nextTurn).catch(() => {})
+
     statusEl.textContent =
       `${nextTurn}/${turns.length} blocks | ` +
       `${turns.length - nextTurn} remaining`
