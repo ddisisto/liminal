@@ -215,13 +215,14 @@ See CLAUDE.md for the canonical module map. Key architectural boundaries:
 1. ~~**Research survey**~~ — done: attention instrumentation, token annotation systems.
 2. ~~**Layer 0–1 prototype**~~ — done: pull-driven delivery, per-token rendering, viewport-time attention capture with live visual feedback, settings panel with persistence.
 3. ~~**Document model + IndexedDB**~~ — done: frontend storage layer with documents, blocks, reading sessions, attention in IndexedDB. Settings persist to localStorage.
-4. **Document reader** — strip mock conversation, load documents as content blocks. Link interception for graph navigation between documents. Session flyout for switching. See [document-model.md](document-model.md#implementation-plan) for detailed plan.
-5. **Document management** — import (paste, file, URL), remove. The reader builds their own document collection.
-6. **Conversations** — connect backend inference, chat as a live document type. Conversation fork from content documents. Session sync.
-7. **Layer 2–3 build** — annotation interface, entropy/surprisal overlay.
-8. **Layer 4 exploration** — inline expansion and compression.
-9. **Reflective layer** — RAG over the reader's document graph and attention history. Surface connections, suggest revisitations, generate reflections.
-10. **User-model research** — analyse accumulated attention data, design the third predictive system.
+4. ~~**Document reader**~~ — mostly done: content blocks, document graph navigation via links, browser history, resume mode. Session flyout and attention display pending. See [document-model.md](document-model.md#implementation-plan) for detailed plan.
+5. **Attention tracking improvements** — unseen block state, dead-zone handling, visual cue experiments, per-document attention display.
+6. **Document management** — import (paste, file, URL), remove. The reader builds their own document collection.
+7. **Conversations** — connect backend inference, chat as a live document type. Conversation fork from content documents. Session sync.
+8. **Layer 2–3 build** — annotation interface, entropy/surprisal overlay.
+9. **Layer 4 exploration** — inline expansion and compression.
+10. **Reflective layer** — RAG over the reader's document graph and attention history. Surface connections, suggest revisitations, generate reflections.
+11. **User-model research** — analyse accumulated attention data, design the third predictive system.
 
 ---
 

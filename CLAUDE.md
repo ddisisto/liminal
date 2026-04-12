@@ -4,13 +4,13 @@ An attention instrument. Tracks and visualises the reader's own attention patter
 
 ## Project State
 
-Live at ddisisto.github.io/liminal/. Core reading loop: fully pull-driven from first block, per-token streaming with skip-on-pull, block-length font scaling, mobile touch/pinch-to-zoom, settings panel (cog flyout: theme, markup, pace/gap sliders with quadratic scaling), nav controls. GitHub Pages auto-deploys from main.
+Live at ddisisto.github.io/liminal/. Document graph reader: all repo .md files bundled at build time, navigable via links in rendered content. Pull-driven delivery, per-token streaming with skip-on-pull, block-length font scaling, mobile touch/pinch-to-zoom, settings panel (cog flyout: theme, markup, pace/gap sliders, reset button), nav controls, browser back/forward via History API with hash URLs. GitHub Pages auto-deploys from main.
 
-IndexedDB storage layer implemented: documents, blocks, reading sessions, attention all persist locally. Settings persist to localStorage. Mock data imports once then loads from IndexedDB on subsequent visits. Attention warmth carries across page loads.
+IndexedDB storage layer: documents, blocks, reading sessions, attention all persist locally. Resume mode restores reading position on revisit — previously-seen blocks render instantly, pull-driven resumes from last position. Settings persist to localStorage. Attention warmth carries across page loads.
 
 Backend functional but not actively used: FastAPI + SQLite + WebSocket. Will become sync layer and inference host when conversations are implemented. L1 attention capture live: viewport time tracking with IntersectionObserver, AFK gating, live visual feedback (--attention CSS property drives border warmth), persisted to IndexedDB.
 
-Next milestone: transition from mock conversation to document reader. Documents form a navigable graph through links. The self-hosted demo becomes an instrumented browser of the project's own docs. Conversations (via backend inference) become a document type in the same graph.
+Next milestone: attention tracking improvements (unseen block state, dead-zone handling, visual cues), session flyout UI for open documents list, per-document attention display. Conversations (via backend inference) become a document type in the same graph.
 
 ## Key Concepts
 
@@ -43,20 +43,20 @@ schema/
 └── init.sql             # Sessions, sequences, tokens, viewport_events, annotations
 
 frontend/src/
-├── main.ts              # Entry point, JIT pull loop, hero animation, nav
+├── main.ts              # Entry point, pull loop, document switching, link interception, history nav
+├── documents.ts         # Document registry + loader: Vite glob bundles .md files, lazy-load from IndexedDB or bundle
 ├── store.ts             # IndexedDB — documents, blocks, reading sessions, attention
-├── settings.ts          # Settings panel — cog flyout, theme/markup/pace controls
-├── styles.css           # All CSS (extracted from index.html)
-├── session-client.ts    # Document loading: backend → IndexedDB → mock import
+├── settings.ts          # Settings panel — cog flyout, theme/markup/pace controls, reset button
+├── styles.css           # All CSS
+├── session-client.ts    # Backend WebSocket connection for inference and viewport sync
 ├── viewport-tracker.ts  # L1 attention: IntersectionObserver, --attention CSS property, IndexedDB persist
 ├── viewport.ts          # Scroll/touch/pinch detection, gap pull, nav-end fade
 ├── token-renderer.ts    # Per-token <span> creation, animation, data attributes
 ├── stream.ts            # Live token consumer with skip signal
-├── timeline.ts          # Block sequence, block-length scaling, buffered/rendered modes
+├── timeline.ts          # Block sequence, block-length scaling, buffered/rendered modes, clear
 ├── input.ts             # Fixed auto-growing textarea, font scaling, submit handling
 ├── markdown.ts          # Minimal markdown-to-HTML renderer (no dependencies)
-├── types.ts             # TokenData, Block, BlockRole
-└── mock.ts              # Loads project docs as mock conversation via Vite raw imports
+└── types.ts             # TokenData, Block, BlockRole
 ```
 
 ## Docs
@@ -80,8 +80,8 @@ frontend/src/
 
 ## Current Priorities
 
-1. Document reader: strip mock conversation, load docs as content blocks, link interception for graph navigation
-2. Session flyout: open documents list with reading positions, auto-opens on switch
+1. Attention tracking improvements: unseen block state (dimmed/blue border, 1.5s threshold), dead-zone for partially visible blocks, visual cue experiments
+2. Session flyout: open documents list with reading positions, per-document attention display (inline heatmap/histogram)
 3. Document management: import (paste, file, URL), remove
 4. Conversations: connect backend inference, chat as live document, conversation fork from content
 5. Layer 2-3: annotation interface, entropy/surprisal overlays

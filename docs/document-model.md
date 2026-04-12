@@ -190,14 +190,14 @@ The document graph, combined with accumulated attention data, creates the substr
 
 ## Implementation plan
 
-### Phase 1: Document reader (current priority)
+### Phase 1: Document reader
 
-1. **Strip mock conversation wrapper** — load README as a real document. Blocks are paragraphs with role `content`, not simulated chat turns. Drop fake user prompts.
-2. **Delivery modes** — implement pull/resume/open modes in the pull loop. Resume pre-loads blocks to last position. Open renders all blocks immediately.
-3. **Unseen block state** — dimmed + blue border for unread blocks. 1.5s viewport threshold before attention tracking begins. Transition animation on first real view.
-4. **Link interception** — catch clicks on relative markdown links in rendered blocks, hot-load the target document from source.
-5. **Document switching** — save/restore reading position, swap timeline content, create reading sessions per document.
-6. **Session flyout** — minimal UI for open documents list with reading positions. Auto-opens on switch.
+1. ~~**Strip mock conversation wrapper**~~ — done. All .md files bundled via Vite glob import, loaded as content blocks (role `content`). `documents.ts` replaces `mock.ts`.
+2. ~~**Delivery modes**~~ — done. Resume mode renders previously-seen blocks instantly on revisit, pull-driven resumes from last position. Open mode deferred.
+3. **Unseen block state** — dimmed + blue border for unread blocks. 1.5s viewport threshold before attention tracking begins. Transition animation on first real view. Part of broader attention tracking improvements.
+4. ~~**Link interception**~~ — done. Clicks on relative `.md` links resolve paths and hot-load target document. Browser back/forward via History API, hash URLs for direct links.
+5. ~~**Document switching**~~ — done. Reading position saved per document, timeline clears and rebuilds on switch, new reading session created per document.
+6. **Session flyout** — minimal UI for open documents list with reading positions. Per-document attention display (inline heatmap/histogram).
 
 ### Phase 2: Document management
 
