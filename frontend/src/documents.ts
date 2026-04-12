@@ -51,8 +51,6 @@ function splitParagraphs(raw: string): string[] {
     .split(/\n\n+/)
     .map(p => p.trim())
     .filter(p => p.length > 0)
-    // Skip the top-level title (rendered as the HTML h1 hero)
-    .filter(p => !p.startsWith('# ') || p.startsWith('## '))
     // Skip horizontal rules
     .filter(p => p !== '---')
 }

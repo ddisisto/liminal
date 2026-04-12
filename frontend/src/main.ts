@@ -46,7 +46,7 @@ async function main() {
   })
 
   // Scroll-driven title animation: letter-spacing pulls from wide to tight
-  const titleEl = document.querySelector('h1')!
+  const titleEl = document.querySelector('#container > h1')!
   const SPACING_START = 1.5
   const SPACING_END = 0.4
 
@@ -176,8 +176,26 @@ async function main() {
     statusEl.textContent = `${turns.length} blocks | complete`
   }
 
-  // ── Link interception ───────────────────────────────────
+  // ── Navigation ───────────────────────────────────────────
 
+  /** Navigate to a document, optionally pushing browser history. */
+  async function navigate(path: string, pushState: boolean): Promise<void> {
+    if (!hasBundledDoc(path)) {
+      console.warn(`[liminal] document not in bundle: ${path}`)
+      return
+    }
+    const doc = await openDocument(path)
+    if (!doc) {
+      console.warn(`[liminal] failed to open: ${path}`)
+      return
+    }
+    if (pushState) {
+      history.pushState({ path }, '', `#${path}`)
+    }
+    readDocument(doc)
+  }
+
+  // Link interception
   timelineEl.addEventListener('click', async (e) => {
     const anchor = (e.target as Element).closest('a')
     if (!anchor) return
@@ -190,20 +208,14 @@ async function main() {
     if (!href.split('#')[0].endsWith('.md')) return
 
     e.preventDefault()
-
     const targetPath = resolveLink(href, currentPath)
-    if (!hasBundledDoc(targetPath)) {
-      console.warn(`[liminal] document not in bundle: ${targetPath}`)
-      return
-    }
+    navigate(targetPath, true)
+  })
 
-    const doc = await openDocument(targetPath)
-    if (!doc) {
-      console.warn(`[liminal] failed to open: ${targetPath}`)
-      return
-    }
-
-    readDocument(doc)
+  // Browser back/forward
+  window.addEventListener('popstate', (e) => {
+    const path = e.state?.path ?? 'README.md'
+    navigate(path, false)
   })
 
   // ── User input (future: conversation) ───────────────────
@@ -217,7 +229,12 @@ async function main() {
 
   // ── Open root document ──────────────────────────────────
 
-  const root = await openDocument('README.md')
+  // Check if URL has a doc path in the hash (e.g. #docs/architecture-plan.md)
+  const hashPath = location.hash.slice(1)
+  const startPath = (hashPath && hasBundledDoc(hashPath)) ? hashPath : 'README.md'
+
+  history.replaceState({ path: startPath }, '', `#${startPath}`)
+  const root = await openDocument(startPath)
   if (root) {
     readDocument(root)
   } else {
