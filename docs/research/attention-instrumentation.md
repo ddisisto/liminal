@@ -1,6 +1,8 @@
 # Attention Instrumentation in Browser-Based Reading Interfaces
 
-**Research survey for Liminal -- prior art, tools, technical considerations, and signal validity**
+*Research survey. See [attention ownership](../attention-ownership.md) for the thesis, [architecture plan](../architecture-plan.md) for implementation.*
+
+**Prior art, tools, technical considerations, and signal validity.**
 
 *Compiled April 2026. Sources are a mix of training-data knowledge (marked [TK]) and web search results (marked [WS]). Treat accordingly.*
 

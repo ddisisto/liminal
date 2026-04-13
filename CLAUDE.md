@@ -10,7 +10,7 @@ IndexedDB storage layer: documents, blocks, reading sessions, attention all pers
 
 Backend functional but not actively used: FastAPI + SQLite + WebSocket. Will become sync layer and inference host when conversations are implemented. L1 attention capture live: viewport time tracking with IntersectionObserver, AFK gating, live visual feedback (--attention CSS property drives border warmth), persisted to IndexedDB.
 
-Next milestone: attention tracking improvements (unseen block state, dead-zone handling, visual cues), session flyout UI for open documents list, per-document attention display. Conversations (via backend inference) become a document type in the same graph.
+Attention tracking now has three visual states: unseen (dim + blue border, 1.5s threshold before tracking begins), in-viewport (warm background tint, wider border — blocks must be fully visible or occupy 30%+ of viewport), and tracked (accumulated warmth via --attention). Smooth transitions between states.
 
 ## Key Concepts
 
@@ -61,15 +61,17 @@ frontend/src/
 
 ## Docs
 
-- `docs/attention-ownership.md` — attention inversion thesis, reader ownership, sharing implications
+- `README.md` — root node: experiential intro, attention ownership pitch, document graph entry point
+- `docs/design-philosophy.md` — the reading instrument thesis, viewport ownership, pull-driven pacing, content-intrinsic scaling
 - `docs/project-brief.md` — conceptual design, layer model, design principles
-- `docs/architecture-plan.md` — stack, schema, data flow, component boundaries, WebSocket protocol
+- `docs/attention-ownership.md` — attention inversion thesis, reader ownership, sharing implications
 - `docs/theory.md` — coupled oscillator analogy, game theory, memetic acceleration
-- `README.md` — demo page intro content, self-hosted through the live demo
+- `docs/architecture-plan.md` — stack, schema, data flow, component boundaries, WebSocket protocol
+- `docs/document-model.md` — document/block/reading-session data model, IndexedDB + SQLite storage
+- `docs/semantic-zoom.md` — viewport-density-driven scaling and collapse (planned)
+- `docs/ui-settings-control.md` — settings panel design, controls inventory, interaction spec
 - `docs/research/attention-instrumentation.md` — prior art and implementation priorities for attention capture
 - `docs/research/token-annotation-systems.md` — prior art for token visualization and annotation UX
-- `docs/document-model.md` — document/block/reading-session data model, IndexedDB + SQLite storage
-- `docs/ui-settings-control.md` — settings panel design, controls inventory, interaction spec
 
 ## Conventions
 
@@ -80,12 +82,14 @@ frontend/src/
 
 ## Current Priorities
 
-1. Attention tracking improvements: unseen block state (dimmed/blue border, 1.5s threshold), dead-zone for partially visible blocks, visual cue experiments
+1. Attention visual tuning: experiment with warmth curves, threshold values, in-viewport indicator as settings toggle
 2. Session flyout: open documents list with reading positions, per-document attention display (inline heatmap/histogram)
-3. Document management: import (paste, file, URL), remove
-4. Conversations: connect backend inference, chat as live document, conversation fork from content
-5. Layer 2-3: annotation interface, entropy/surprisal overlays
-6. Reflective layer: RAG over document graph and attention history
+3. Document graph polish: link review across docs, hover preview on links (planned), inline visited-link attention timeline (planned)
+4. Document management: import (paste, file, URL), remove
+5. Conversations: connect backend inference, chat as live document, conversation fork from content
+6. Layer 2-3: annotation interface, entropy/surprisal overlays
+7. Semantic zoom: viewport-density-driven scaling and collapse
+8. Reflective layer: RAG over document graph and attention history
 
 ## Dev Environment
 
@@ -93,5 +97,5 @@ frontend/src/
 - Backend: `uvicorn backend.main:app --reload --port 8000`
 - Frontend: `npm install`, `npx vite` for dev server on port 3000
 - SQLite DB auto-creates at `data/liminal.db` on backend startup
-- Frontend works without backend (IndexedDB primary, mock data import on first load)
+- Frontend works without backend (IndexedDB primary, bundled docs imported on first load)
 - Vite config at root, frontend source in `frontend/`
