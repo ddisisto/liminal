@@ -15,6 +15,7 @@ import { streamTokens } from './stream'
 import { ViewportTracker } from './viewport-tracker'
 import { updateSessionPosition } from './store'
 import { openDocument, resolveLink, hasBundledDoc, type DocumentSession } from './documents'
+import { DocList } from './doc-list'
 
 async function main() {
   await document.fonts.ready
@@ -79,6 +80,9 @@ async function main() {
   const input = new InputArea()
   input.mount(document.body)
 
+  const docList = new DocList()
+  docList.onNavigateHandler((docId) => navigate(docId, true))
+
   // ── Document reading loop ───────────────────────────────
 
   // Abort controller for cancelling the current reading loop on document switch
@@ -97,6 +101,7 @@ async function main() {
 
     currentPath = doc.path
     settings.currentDocId = doc.documentId
+    docList.setCurrentDoc(doc.documentId)
     const { turns, readingSessionId, lastPosition } = doc
 
     // Clear and reset

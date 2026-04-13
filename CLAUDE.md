@@ -82,9 +82,9 @@ frontend/src/
 
 ## Current Priorities
 
-1. Attention visual tuning: experiment with warmth curves, threshold values, in-viewport indicator as settings toggle
-2. Session flyout: open documents list with reading positions, per-document attention display (inline heatmap/histogram)
-3. Document graph polish: link review across docs, hover preview on links (planned), inline visited-link attention timeline (planned)
+1. Session flyout: open documents list with reading positions, per-document attention display (inline heatmap/histogram)
+2. Document graph polish: hover preview on links (planned), inline visited-link attention timeline (planned)
+3. Attention visual tuning: revisit warmth curves, thresholds, palette when L2-3 work introduces new visual layers
 4. Document management: import (paste, file, URL), remove
 5. Conversations: connect backend inference, chat as live document, conversation fork from content
 6. Layer 2-3: annotation interface, entropy/surprisal overlays
