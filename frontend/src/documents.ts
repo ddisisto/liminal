@@ -14,6 +14,7 @@ import { mockTokens } from './stream'
 import {
   getDocument, putDocument, getBlocks, putBlocks,
   putReadingSession, getLatestSession, updateSessionPosition,
+  deleteDocumentData,
   type StoredDocument, type StoredBlock,
 } from './store'
 import type { Turn } from './session-client'
@@ -92,6 +93,22 @@ export function resolveLink(href: string, fromPath: string): string {
   return parts.join('/')
 }
 
+// ── Content hashing ───────────────────────────────────────
+
+/**
+ * djb2 string hash, base-36 encoded. Used as a version marker for
+ * bundled documents: stored docs whose hash doesn't match the current
+ * bundle text are stale and get wiped.
+ */
+function hashContent(text: string): string {
+  let h = 5381
+  for (let i = 0; i < text.length; i++) {
+    h = ((h << 5) + h + text.charCodeAt(i)) | 0
+  }
+  // >>> 0 to coerce to unsigned before base-36
+  return (h >>> 0).toString(36)
+}
+
 // ── Document loading ──────────────────────────────────────
 
 export interface DocumentSession {
@@ -109,45 +126,91 @@ export interface DocumentSession {
  */
 export async function openDocument(path: string): Promise<DocumentSession | null> {
   const docId = path
+  const loader = bundledDocs.get(path)
 
-  // Try IndexedDB first
-  const existing = await getDocument(docId)
-  if (existing) {
-    const blocks = await getBlocks(docId)
-    if (blocks.length > 0) {
-      const priorSession = await getLatestSession(docId)
-      const lastPosition = priorSession?.position ?? 0
+  // Bundled doc: version-check against the current bundle text. A stale
+  // stored copy is wiped cascade-style (blocks, reading sessions,
+  // attention) and re-imported from the bundle. No migration — the
+  // reader loses position and attention on that doc when the content
+  // changes, which is the accepted constraint for KISS invalidation.
+  if (loader) {
+    const raw = await loader()
+    const version = hashContent(raw)
 
-      const turns: Turn[] = blocks.map(b => ({
-        role: b.role as Turn['role'],
-        tokens: b.tokens.map(t => ({
-          text: t,
-          logprob: -(Math.random() * 4 + 0.2),
-          entropy: Math.random() * 5 + 0.5,
-          surprisal: Math.random() * 4 + 0.2,
-        })),
-        text: b.text,
-      }))
+    const existing = await getDocument(docId)
+    if (existing && existing.version === version) {
+      const blocks = await getBlocks(docId)
+      if (blocks.length > 0) {
+        const priorSession = await getLatestSession(docId)
+        const lastPosition = priorSession?.position ?? 0
 
-      const readingSessionId = crypto.randomUUID()
-      await putReadingSession({
-        id: readingSessionId,
-        docId,
-        started: Date.now(),
-        lastActive: Date.now(),
-        position: lastPosition,
-      })
+        const turns: Turn[] = blocks.map(b => ({
+          role: b.role as Turn['role'],
+          tokens: b.tokens.map(t => ({
+            text: t,
+            logprob: -(Math.random() * 4 + 0.2),
+            entropy: Math.random() * 5 + 0.5,
+            surprisal: Math.random() * 4 + 0.2,
+          })),
+          text: b.text,
+        }))
 
-      console.log(`[liminal] opened from IndexedDB: ${path} (${blocks.length} blocks, position ${lastPosition})`)
-      return { turns, documentId: docId, path, readingSessionId, lastPosition }
+        const readingSessionId = crypto.randomUUID()
+        await putReadingSession({
+          id: readingSessionId,
+          docId,
+          started: Date.now(),
+          lastActive: Date.now(),
+          position: lastPosition,
+        })
+
+        console.log(`[liminal] opened from IndexedDB: ${path} (${blocks.length} blocks, position ${lastPosition})`)
+        return { turns, documentId: docId, path, readingSessionId, lastPosition }
+      }
+    } else if (existing) {
+      console.log(`[liminal] stale cache for ${path} — wiping and re-importing`)
+      await deleteDocumentData(docId)
     }
+
+    return await importFromBundle(path, raw, version)
   }
 
-  // Try build-time bundle
-  const loader = bundledDocs.get(path)
-  if (!loader) return null
+  // Non-bundled path (future: user-imported docs). IndexedDB only.
+  const existing = await getDocument(docId)
+  if (!existing) return null
 
-  const raw = await loader()
+  const blocks = await getBlocks(docId)
+  if (blocks.length === 0) return null
+
+  const priorSession = await getLatestSession(docId)
+  const lastPosition = priorSession?.position ?? 0
+
+  const turns: Turn[] = blocks.map(b => ({
+    role: b.role as Turn['role'],
+    tokens: b.tokens.map(t => ({
+      text: t,
+      logprob: -(Math.random() * 4 + 0.2),
+      entropy: Math.random() * 5 + 0.5,
+      surprisal: Math.random() * 4 + 0.2,
+    })),
+    text: b.text,
+  }))
+
+  const readingSessionId = crypto.randomUUID()
+  await putReadingSession({
+    id: readingSessionId,
+    docId,
+    started: Date.now(),
+    lastActive: Date.now(),
+    position: lastPosition,
+  })
+
+  console.log(`[liminal] opened from IndexedDB: ${path} (${blocks.length} blocks, position ${lastPosition})`)
+  return { turns, documentId: docId, path, readingSessionId, lastPosition }
+}
+
+async function importFromBundle(path: string, raw: string, version: string): Promise<DocumentSession> {
+  const docId = path
   const turns = textToTurns(raw)
   const now = Date.now()
 
@@ -160,6 +223,7 @@ export async function openDocument(path: string): Promise<DocumentSession | null
     title,
     source: { type: 'file', ref: path },
     created: now,
+    version,
   }
 
   const blocks: StoredBlock[] = turns.map((t, i) => ({

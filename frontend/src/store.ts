@@ -20,6 +20,13 @@ export interface StoredDocument {
   title: string
   source: DocSource
   created: number  // Date.now()
+  /**
+   * Content version marker. For bundled docs, a hash of the raw bundle
+   * text — mismatch with the current bundle means the stored copy is
+   * stale and should be wiped and re-imported. Undefined on entries
+   * from before this field existed (always treated as stale).
+   */
+  version?: string
   parent?: string
   forkBlock?: number
 }
