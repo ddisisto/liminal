@@ -1,0 +1,107 @@
+/* Reset, theme variables, layout shell, hero */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --user-scale: 1;
+
+  /* Dark theme (default) */
+  --bg: #0a0a0f;
+  --fg: #c8c8d0;
+  --fg-muted: #606068;
+  --fg-faint: #505058;
+  --fg-dim: #404048;
+  --fg-ghost: #303038;
+  --accent: #606080;
+  --accent-hover: #8080a0;
+  --border: #1a1a25;
+  --border-mid: #2a2a35;
+  --border-user: #3a5a3a;
+  --fg-user: #a0c0a0;
+  --surface: #101018;
+  --surface-code: #12121a;
+  --fg-strong: #d0d0d8;
+  --fg-em: #b0b0b8;
+  --fg-heading: #909098;
+  --border-focus: #2a2a45;
+  --border-attn: #6a5030;   /* warm amber — attention target */
+  --border-unseen: #2a3a5a; /* blue tint — unseen blocks */
+  --fg-unseen: 0.4;         /* opacity for unseen blocks */
+}
+
+[data-theme="light"] {
+  --bg: #f5f5f0;
+  --fg: #2a2a30;
+  --fg-muted: #808088;
+  --fg-faint: #909098;
+  --fg-dim: #a0a0a8;
+  --fg-ghost: #b8b8c0;
+  --accent: #505070;
+  --accent-hover: #404060;
+  --border: #d8d8e0;
+  --border-mid: #c8c8d0;
+  --border-user: #7aaa7a;
+  --fg-user: #3a6a3a;
+  --surface: #eaeae5;
+  --surface-code: #e4e4df;
+  --fg-strong: #1a1a20;
+  --fg-em: #3a3a42;
+  --fg-heading: #4a4a52;
+  --border-focus: #a0a0b8;
+  --border-attn: #c09050;   /* warm amber for light theme */
+  --border-unseen: #7090c0; /* blue tint — unseen blocks */
+  --fg-unseen: 0.45;        /* opacity for unseen blocks */
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  transition: background 0.2s, color 0.2s;
+}
+
+#container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0 24px;
+  touch-action: pan-x pan-y;
+}
+
+/* Extra space below content so the tip can sit at 2/3 viewport height,
+   plus room for the fixed input area */
+#timeline {
+  padding-bottom: calc(var(--gap, 33) * 1vh + 160px);
+}
+
+/* Hero title — scroll-driven letter-spacing animation */
+#container > h1 {
+  font-size: calc(1.6rem * var(--user-scale));
+  font-weight: 200;
+  color: var(--fg-muted);
+  letter-spacing: 1.5em;
+  text-transform: lowercase;
+  text-align: center;
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  position: relative;
+  will-change: letter-spacing, transform;
+}
+
+#container > h1::before,
+#container > h1::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 1px;
+  background: var(--border-mid);
+}
+
+#container > h1::before { top: 35%; }
+#container > h1::after { bottom: 35%; }

@@ -1,0 +1,175 @@
+/* Settings cog + flyout panel */
+
+.settings-cog {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: var(--fg-dim);
+  font-size: 27px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  transition: color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.settings-cog:hover,
+.settings-cog--open {
+  color: var(--fg-muted);
+}
+
+.settings-panel {
+  position: fixed;
+  top: 16px;
+  right: 60px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  min-width: 200px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  z-index: 20;
+  display: none;
+}
+
+.settings-panel--open {
+  display: block;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.settings-label {
+  font-size: 12px;
+  color: var(--fg-muted);
+  letter-spacing: 0.03em;
+}
+
+.settings-toggles {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.settings-pill {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.settings-pill button {
+  background: none;
+  border: none;
+  color: var(--fg-dim);
+  font-family: monospace;
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.settings-pill button:hover {
+  color: var(--fg-muted);
+}
+
+.settings-pill button.active {
+  color: var(--fg);
+  background: var(--border);
+}
+
+.settings-separator {
+  border-top: 1px solid var(--border);
+  margin: 8px 0;
+}
+
+.settings-row--slider {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.settings-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings-value {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--fg-dim);
+}
+
+.settings-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.settings-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: var(--fg-dim);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.settings-slider::-webkit-slider-thumb:hover {
+  background: var(--fg-muted);
+}
+
+.settings-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: var(--fg-dim);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.settings-reset-row {
+  display: flex;
+  gap: 6px;
+}
+
+.settings-reset {
+  flex: 1;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--fg-dim);
+  font-family: monospace;
+  font-size: 11px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.settings-reset:hover {
+  color: var(--fg-muted);
+  border-color: var(--border-mid);
+}
+
+.settings-reset--armed {
+  color: #c06050;
+  border-color: #c06050;
+}
