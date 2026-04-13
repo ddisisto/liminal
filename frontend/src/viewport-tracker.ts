@@ -52,7 +52,7 @@ export class ViewportTracker {
 
     this.observer = new IntersectionObserver(
       (entries) => this.onIntersection(entries),
-      { threshold: 0.1 },  // 10% visible counts
+      { threshold: [0, 0.25, 0.5, 0.75, 1.0] },
     )
 
     // AFK gating
@@ -106,14 +106,26 @@ export class ViewportTracker {
     this.priorAttention = await getDocumentAttention(docId)
   }
 
+  /** Check if a block meets the attention threshold:
+   *  fully visible, OR occupies >= 30% of viewport. */
+  private meetsAttentionThreshold(entry: IntersectionObserverEntry): boolean {
+    if (!entry.isIntersecting) return false
+    // Fully visible
+    if (entry.intersectionRatio >= 0.99) return true
+    // Large block: occupies >= 30% of viewport
+    const viewportHeight = entry.rootBounds?.height ?? window.innerHeight
+    return entry.intersectionRect.height / viewportHeight >= 0.3
+  }
+
   private onIntersection(entries: IntersectionObserverEntry[]): void {
     const now = Date.now()
     for (const entry of entries) {
       const block = this.blocks.find(b => b.element === entry.target)
       if (!block) continue
 
-      if (entry.isIntersecting && this.active) {
-        // Entered viewport
+      const qualifies = this.meetsAttentionThreshold(entry) && this.active
+
+      if (qualifies) {
         block.element.classList.add('block--in-viewport')
         if (block.visibleSince === null) {
           block.visibleSince = now
@@ -121,7 +133,6 @@ export class ViewportTracker {
           block.dirty = true
         }
       } else {
-        // Left viewport (or tab went inactive)
         block.element.classList.remove('block--in-viewport')
         this.closeInterval(block, now)
       }
@@ -215,8 +226,12 @@ export class ViewportTracker {
     for (const block of this.blocks) {
       const rect = block.element.getBoundingClientRect()
       const viewportHeight = window.innerHeight
-      const isVisible = rect.bottom > 0 && rect.top < viewportHeight
-      if (isVisible) {
+      const visibleTop = Math.max(0, rect.top)
+      const visibleBottom = Math.min(viewportHeight, rect.bottom)
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop)
+      const fullyVisible = rect.top >= 0 && rect.bottom <= viewportHeight
+      const occupiesEnough = visibleHeight / viewportHeight >= 0.3
+      if (fullyVisible || occupiesEnough) {
         block.element.classList.add('block--in-viewport')
         if (block.visibleSince === null) {
           block.visibleSince = now

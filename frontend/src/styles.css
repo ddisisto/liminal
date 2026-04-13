@@ -114,7 +114,7 @@ body {
   padding: 8px 0;
   white-space: pre-wrap;
   --attention: 0;
-  transition: opacity 600ms ease, border-left-color 600ms ease;
+  transition: opacity 600ms ease, border-left-color 600ms ease, background 300ms ease;
 }
 
 .block:hover {
@@ -161,6 +161,7 @@ body {
 .block--in-viewport {
   border-left-width: 3px;
   padding-left: 11px;  /* compensate for wider border */
+  background: color-mix(in oklch, var(--bg), var(--border-attn) 5%);
 }
 
 .token {
