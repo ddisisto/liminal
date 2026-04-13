@@ -210,6 +210,81 @@ export async function putAttentionBatch(records: AttentionRecord[]): Promise<voi
   await txDone(tx)
 }
 
+// ── Bulk deletion ──────────────────────────────────────────
+
+/**
+ * Delete all data for a single document: its blocks, reading sessions,
+ * attention records, and the document entry itself.
+ */
+export async function deleteDocumentData(docId: string): Promise<void> {
+  const db = await getDb()
+
+  // Collect session IDs first — needed to scope attention deletion.
+  const sessions = await getSessionsForDoc(docId)
+  const sessionIds = new Set(sessions.map(s => s.id))
+
+  const tx = db.transaction(['documents', 'blocks', 'reading_sessions', 'attention'], 'readwrite')
+
+  // Blocks — delete by byDoc index
+  const blocksStore = tx.objectStore('blocks')
+  const blockKeysReq = blocksStore.index('byDoc').getAllKeys(docId)
+  blockKeysReq.onsuccess = () => {
+    for (const key of blockKeysReq.result) blocksStore.delete(key as IDBValidKey)
+  }
+
+  // Reading sessions
+  const sessionsStore = tx.objectStore('reading_sessions')
+  for (const id of sessionIds) sessionsStore.delete(id)
+
+  // Attention records — scan and delete those whose sessionId matches
+  const attnStore = tx.objectStore('attention')
+  const cursorReq = attnStore.openCursor()
+  cursorReq.onsuccess = () => {
+    const cursor = cursorReq.result
+    if (!cursor) return
+    if (sessionIds.has((cursor.value as AttentionRecord).sessionId)) {
+      cursor.delete()
+    }
+    cursor.continue()
+  }
+
+  // Document entry
+  tx.objectStore('documents').delete(docId)
+
+  await txDone(tx)
+}
+
+/**
+ * Delete every IndexedDB database accessible to this origin.
+ * Closes the liminal singleton connection first so deletion isn't blocked.
+ */
+export async function deleteAllDatabases(): Promise<void> {
+  // Close our own connection so the delete isn't blocked
+  if (dbPromise) {
+    try { (await dbPromise).close() } catch { /* ignore */ }
+    dbPromise = null
+  }
+
+  const deleteOne = (name: string) => new Promise<void>((resolve) => {
+    const req = indexedDB.deleteDatabase(name)
+    req.onsuccess = () => resolve()
+    req.onerror = () => resolve()
+    req.onblocked = () => resolve()
+  })
+
+  // Modern browsers expose indexedDB.databases(); fall back to our known name.
+  const list = typeof indexedDB.databases === 'function'
+    ? await indexedDB.databases().catch(() => [])
+    : []
+
+  const names = new Set<string>([DB_NAME])
+  for (const info of list) {
+    if (info.name) names.add(info.name)
+  }
+
+  await Promise.all([...names].map(deleteOne))
+}
+
 /**
  * Get all attention records for a document across all reading sessions.
  * Returns a Map of blockIndex → total cumulative viewport time (ms).

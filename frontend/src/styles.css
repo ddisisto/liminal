@@ -477,8 +477,13 @@ body {
   cursor: pointer;
 }
 
+.settings-reset-row {
+  display: flex;
+  gap: 6px;
+}
+
 .settings-reset {
-  width: 100%;
+  flex: 1;
   background: none;
   border: 1px solid var(--border);
   border-radius: 3px;

@@ -4,6 +4,7 @@
  */
 
 import type { Timeline } from './timeline'
+import { deleteDocumentData, deleteAllDatabases } from './store'
 
 export class Settings {
   private timeline: Timeline
@@ -17,6 +18,8 @@ export class Settings {
   pace = 33
   /** Gap position as fraction of viewport height (0 = top, 1 = bottom). */
   gap = 0.33
+  /** Id of the document currently being read — set by main.ts on navigate. */
+  currentDocId: string | null = null
 
   constructor(timeline: Timeline) {
     this.timeline = timeline
@@ -100,17 +103,52 @@ export class Settings {
     // Set initial CSS property
     this.applyGap()
 
-    // Reset button
+    // Reset buttons
     panel.appendChild(this.buildSeparator())
-    panel.appendChild(this.buildResetButton())
+    panel.appendChild(this.buildResetRow())
 
     return panel
   }
 
-  private buildResetButton(): HTMLElement {
+  private buildResetRow(): HTMLElement {
+    const row = document.createElement('div')
+    row.className = 'settings-reset-row'
+
+    const docBtn = this.buildArmedButton({
+      idle: 'reset document',
+      armed: 'confirm document reset',
+      onConfirm: async () => {
+        if (this.currentDocId) {
+          await deleteDocumentData(this.currentDocId)
+        }
+        window.scrollTo(0, 0)
+        location.reload()
+      },
+    })
+
+    const allBtn = this.buildArmedButton({
+      idle: 'reset all',
+      armed: 'confirm wipe all',
+      onConfirm: async () => {
+        await deleteAllDatabases()
+        window.scrollTo(0, 0)
+        location.reload()
+      },
+    })
+
+    row.appendChild(docBtn)
+    row.appendChild(allBtn)
+    return row
+  }
+
+  private buildArmedButton(opts: {
+    idle: string
+    armed: string
+    onConfirm: () => void
+  }): HTMLButtonElement {
     const btn = document.createElement('button')
     btn.className = 'settings-reset'
-    btn.textContent = 'reset reading data'
+    btn.textContent = opts.idle
 
     let armed = false
     let timer: number | undefined
@@ -118,29 +156,20 @@ export class Settings {
     btn.addEventListener('click', () => {
       if (!armed) {
         armed = true
-        btn.textContent = 'confirm reset'
+        btn.textContent = opts.armed
         btn.classList.add('settings-reset--armed')
-        // Disarm after 3s
         timer = window.setTimeout(() => {
           armed = false
-          btn.textContent = 'reset reading data'
+          btn.textContent = opts.idle
           btn.classList.remove('settings-reset--armed')
         }, 3000)
       } else {
         clearTimeout(timer)
-        this.resetData()
+        opts.onConfirm()
       }
     })
 
     return btn
-  }
-
-  private resetData(): void {
-    // Delete the IndexedDB database entirely
-    indexedDB.deleteDatabase('liminal')
-    // Scroll to top, then reload to re-import fresh
-    window.scrollTo(0, 0)
-    location.reload()
   }
 
   private buildPill(

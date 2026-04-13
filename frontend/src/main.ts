@@ -46,7 +46,7 @@ async function main() {
   })
 
   // Scroll-driven title animation: letter-spacing pulls from wide to tight
-  const titleEl = document.querySelector('#container > h1')!
+  const titleEl = document.querySelector<HTMLHeadingElement>('#container > h1')!
   const SPACING_START = 1.5
   const SPACING_END = 0.4
 
@@ -96,6 +96,7 @@ async function main() {
     if (tracker) tracker.destroy()
 
     currentPath = doc.path
+    settings.currentDocId = doc.documentId
     const { turns, readingSessionId, lastPosition } = doc
 
     // Clear and reset
