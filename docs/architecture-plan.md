@@ -8,7 +8,7 @@
 
 Liminal is an attention instrument: a self-hosted, browser-based reading and conversation interface with passive attention instrumentation and progressive analytical depth. The core abstraction is the **document** — an immutable, ordered sequence of blocks. Chat is a special case where the document is still being written. See [document-model.md](document-model.md) for the full data model.
 
-The architecture prioritises simplicity, low infrastructure overhead, and clean separation between concerns — while preserving room for the system to grow into the more speculative layers described in the project brief. The foundational design principles (viewport ownership, pull-driven pacing, content-intrinsic scaling) are described in the [design philosophy](design-philosophy.md).
+The architecture prioritises simplicity, low infrastructure overhead, and clean separation between concerns — while preserving room for the system to grow into the more speculative layers described in the [project brief](project-brief.md). The foundational design principles (viewport ownership, pull-driven pacing, content-intrinsic scaling) are described in the [design philosophy](design-philosophy.md).
 
 The system is single-user, local-first, and designed to run on modest hardware (NVIDIA GTX 1070, 8GB VRAM) during the prototyping phase.
 

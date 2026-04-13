@@ -36,11 +36,16 @@ The [design philosophy](docs/design-philosophy.md) starts from a single principl
 
 This document is one node in a graph. The links below open other documents in the same reader — your reading position here is saved, attention carries across, and you can return anytime.
 
-[Design philosophy](docs/design-philosophy.md) — the reading instrument, viewport ownership, content-intrinsic scaling. [Project brief](docs/project-brief.md) — the layer model from pacing through attention to adaptive difficulty. [Attention ownership](docs/attention-ownership.md) — why your data belongs to you, and what opens up when you choose to share it. [Theory](docs/theory.md) — coupled oscillators, game theory, memetic acceleration at the reader-model boundary.
-
-[Architecture](docs/architecture-plan.md) — stack, schema, data flow. [Document model](docs/document-model.md) — how documents, blocks, and attention are structured. [Semantic zoom](docs/semantic-zoom.md) — scaling content density to viewport (planned). [Settings](docs/ui-settings-control.md) — the controls you can already use (try the cog, top right).
-
-[Attention instrumentation research](docs/research/attention-instrumentation.md) — prior art in viewport tracking and engagement measurement. [Token annotation research](docs/research/token-annotation-systems.md) — prior art in per-token visualization and annotation UX.
+- [Design philosophy](docs/design-philosophy.md) — the reading instrument, viewport ownership, content-intrinsic scaling
+- [Project brief](docs/project-brief.md) — the layer model from pacing through attention to adaptive difficulty
+- [Attention ownership](docs/attention-ownership.md) — why your data belongs to you, and what opens up when you choose to share it
+- [Theory](docs/theory.md) — coupled oscillators, game theory, memetic acceleration at the reader-model boundary
+- [Architecture](docs/architecture-plan.md) — stack, schema, data flow
+- [Document model](docs/document-model.md) — how documents, blocks, and attention are structured
+- [Semantic zoom](docs/semantic-zoom.md) — scaling content density to viewport (planned)
+- [Settings](docs/ui-settings-control.md) — the controls you can already use (try the cog, top right)
+- [Attention instrumentation research](docs/research/attention-instrumentation.md) — prior art in viewport tracking and engagement measurement
+- [Token annotation research](docs/research/token-annotation-systems.md) — prior art in per-token visualization and annotation UX
 
 Follow what's interesting. Return here when you need bearings.
 
