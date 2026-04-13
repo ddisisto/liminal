@@ -114,7 +114,7 @@ body {
   padding: 8px 0;
   white-space: pre-wrap;
   --attention: 0;
-  transition: opacity 150ms ease;
+  transition: opacity 600ms ease, border-left-color 600ms ease;
 }
 
 .block:hover {
