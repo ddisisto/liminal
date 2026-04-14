@@ -43,7 +43,7 @@ This document is one node in a graph. The links below open other documents in th
 - [Architecture](docs/architecture.md) — stack, schema, data flow
 - [Document model](docs/document-model.md) — how documents, blocks, and attention are structured
 - [Semantic zoom](docs/semantic-zoom.md) — scaling content density to viewport (planned)
-- [Settings](docs/ui-settings-control.md) — the controls you can already use (try the cog, top right)
+- [Settings](docs/settings.md) — the controls you can already use (try the cog, top right)
 - [Attention instrumentation research](docs/research/attention-instrumentation.md) — prior art in viewport tracking and engagement measurement
 - [Token annotation research](docs/research/token-annotation-systems.md) — prior art in per-token visualization and annotation UX
 

@@ -69,7 +69,7 @@ frontend/src/
 - `docs/architecture.md` — stack, schema, data flow, component boundaries, WebSocket protocol
 - `docs/document-model.md` — document/block/reading-session data model, IndexedDB + SQLite storage
 - `docs/semantic-zoom.md` — viewport-density-driven scaling and collapse (planned)
-- `docs/ui-settings-control.md` — settings panel design, controls inventory, interaction spec
+- `docs/settings.md` — settings panel design, controls inventory, interaction spec
 - `docs/research/attention-instrumentation.md` — prior art and implementation priorities for attention capture
 - `docs/research/token-annotation-systems.md` — prior art for token visualization and annotation UX
 
