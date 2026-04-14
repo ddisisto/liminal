@@ -6,22 +6,39 @@
  */
 
 import {
-  listDocuments, getBlocks, getLatestSession, getDocumentAttention,
-  deleteDocumentData, type StoredDocument,
+  getBlocks, getLatestSession, getDocumentAttention,
+  deleteDocumentData,
 } from './store'
+import { listBundledDocs } from './documents'
 
 const WARM_THRESHOLD_MS = 30000  // matches viewport-tracker
 const WIDE_MEDIA = '(min-width: 960px)'
 const CHEVRON_CLOSED = '\u22D7'  // ⋗
 const CHEVRON_OPEN = '\u22D6'    // ⋖
 
-export interface DocListEntry {
-  id: string
-  title: string
+interface LeafStats {
   blockCount: number
-  position: number       // last block seen
+  position: number
   attentionPct: number   // 0–100, mean of per-block attention (unseen = 0)
 }
+
+interface TreeLeaf {
+  kind: 'leaf'
+  path: string           // repo-relative, e.g. 'docs/design-philosophy.md'
+  label: string          // filename only
+  stats: LeafStats
+  greyed: boolean        // no accumulated attention
+}
+
+interface TreeFolder {
+  kind: 'folder'
+  key: string            // unique path within the tree, for collapse state
+  label: string
+  children: TreeNode[]
+  greyed: boolean        // all descendants greyed
+}
+
+type TreeNode = TreeLeaf | TreeFolder
 
 type NavigateHandler = (docId: string) => void
 
@@ -34,6 +51,10 @@ export class DocList {
   private wide: MediaQueryList
   private onNavigate: NavigateHandler | null = null
   private currentDocId: string | null = null
+  /** Folder keys currently collapsed. Default: everything expanded. */
+  private collapsed = new Set<string>()
+  /** Monotonic token: stale refreshes drop their DOM mutation. */
+  private refreshToken = 0
 
   constructor() {
     this.panel = this.buildPanel()
@@ -76,43 +97,36 @@ export class DocList {
     this.onNavigate = fn
   }
 
-  /** Set the currently active document (for highlighting). */
+  /** Set the currently active document (for highlighting + stats refresh). */
   setCurrentDoc(docId: string): void {
     this.currentDocId = docId
-    this.updateHighlight()
+    // Refresh to pick up latest attention/position across the tree.
+    // Fire-and-forget — the list updates when IndexedDB reads complete.
+    if (this.open) void this.refresh()
   }
 
-  /** Refresh the list from IndexedDB. Call on document switch or periodically. */
+  /** Rebuild the tree from the bundle + IndexedDB stats. */
   async refresh(): Promise<void> {
-    const docs = await listDocuments()
-    const entries = await Promise.all(docs.map(d => this.buildEntry(d)))
-
-    // Sort: most recently active first
-    entries.sort((a, b) => {
-      // Current doc always first
-      if (a.id === this.currentDocId) return -1
-      if (b.id === this.currentDocId) return 1
-      return 0  // stable order otherwise
-    })
+    const token = ++this.refreshToken
+    const paths = listBundledDocs()
+    const leaves = await Promise.all(paths.map(p => this.buildLeaf(p)))
+    if (token !== this.refreshToken) return  // superseded by a newer refresh
+    const root = this.buildTree(leaves)
 
     this.listEl.innerHTML = ''
-    for (const entry of entries) {
-      this.listEl.appendChild(this.buildRow(entry))
-    }
+    this.renderNode(root, 0, this.listEl)
   }
 
-  private async buildEntry(doc: StoredDocument): Promise<DocListEntry> {
+  private async buildLeaf(path: string): Promise<TreeLeaf> {
     const [blocks, session, attention] = await Promise.all([
-      getBlocks(doc.id),
-      getLatestSession(doc.id),
-      getDocumentAttention(doc.id),
+      getBlocks(path),
+      getLatestSession(path),
+      getDocumentAttention(path),
     ])
 
     const blockCount = blocks.length
     const position = session?.position ?? 0
 
-    // Mean attention: sum of per-block attention values / total blocks
-    // Unseen blocks (not in attention map) count as 0
     let totalAttention = 0
     for (let i = 0; i < blockCount; i++) {
       const ms = attention.get(i) ?? 0
@@ -122,50 +136,159 @@ export class DocList {
       ? Math.round((totalAttention / blockCount) * 100)
       : 0
 
-    return { id: doc.id, title: doc.title, blockCount, position, attentionPct }
+    const label = path.split('/').pop() ?? path
+    return {
+      kind: 'leaf',
+      path,
+      label,
+      stats: { blockCount, position, attentionPct },
+      greyed: attentionPct === 0,
+    }
   }
 
-  private buildRow(entry: DocListEntry): HTMLElement {
+  /** Assemble leaves into the `about` tree by splitting paths on '/'. */
+  private buildTree(leaves: TreeLeaf[]): TreeFolder {
+    const root: TreeFolder = {
+      kind: 'folder', key: 'about', label: 'about', children: [], greyed: true,
+    }
+
+    for (const leaf of leaves) {
+      const parts = leaf.path.split('/')
+      let cursor = root
+      // Walk folders for all parts except the last (which is the filename)
+      for (let i = 0; i < parts.length - 1; i++) {
+        const folderLabel = parts[i]
+        const folderKey = `about/${parts.slice(0, i + 1).join('/')}`
+        let next = cursor.children.find(
+          c => c.kind === 'folder' && c.label === folderLabel,
+        ) as TreeFolder | undefined
+        if (!next) {
+          next = {
+            kind: 'folder', key: folderKey, label: folderLabel,
+            children: [], greyed: true,
+          }
+          cursor.children.push(next)
+        }
+        cursor = next
+      }
+      cursor.children.push(leaf)
+    }
+
+    // Recursively sort alphabetically and propagate greyed state
+    const finalize = (folder: TreeFolder): void => {
+      folder.children.sort((a, b) => a.label.localeCompare(b.label))
+      let allGreyed = true
+      for (const child of folder.children) {
+        if (child.kind === 'folder') finalize(child)
+        if (!child.greyed) allGreyed = false
+      }
+      folder.greyed = allGreyed && folder.children.length > 0
+    }
+    finalize(root)
+
+    return root
+  }
+
+  private renderNode(node: TreeNode, depth: number, parent: HTMLElement): void {
+    if (node.kind === 'folder') {
+      parent.appendChild(this.buildFolderRow(node, depth))
+      if (!this.collapsed.has(node.key)) {
+        for (const child of node.children) {
+          this.renderNode(child, depth + 1, parent)
+        }
+      }
+    } else {
+      parent.appendChild(this.buildLeafRow(node, depth))
+    }
+  }
+
+  private buildFolderRow(folder: TreeFolder, depth: number): HTMLElement {
     const row = document.createElement('div')
-    row.className = 'doc-list-row'
-    if (entry.id === this.currentDocId) row.classList.add('doc-list-row--active')
-    row.dataset.docId = entry.id
+    row.className = 'doc-list-row doc-list-row--folder'
+    if (folder.greyed) row.classList.add('doc-list-row--greyed')
+    row.style.setProperty('--depth', String(depth))
 
-    // Title
-    const title = document.createElement('span')
-    title.className = 'doc-list-title'
-    title.textContent = entry.title
-    title.title = entry.id  // full path on hover
+    const label = document.createElement('span')
+    label.className = 'doc-list-folder-label'
+    const collapsed = this.collapsed.has(folder.key)
+    label.textContent = `${collapsed ? '\u25B8' : '\u25BE'} ${folder.label}`  // ▸ / ▾
+    row.appendChild(label)
 
-    // Stats
-    const stats = document.createElement('span')
-    stats.className = 'doc-list-stats'
-    stats.textContent = `${entry.position}/${entry.blockCount}  ${entry.attentionPct}%`
-
-    // Remove button
-    const remove = document.createElement('button')
-    remove.className = 'doc-list-remove'
-    remove.textContent = '\u00d7'
-    remove.title = 'Remove from list'
-    remove.addEventListener('click', async (e) => {
-      e.stopPropagation()
-      await deleteDocumentData(entry.id)
-      row.remove()
+    row.addEventListener('click', () => {
+      if (this.collapsed.has(folder.key)) this.collapsed.delete(folder.key)
+      else this.collapsed.add(folder.key)
+      void this.refresh()
     })
 
-    row.appendChild(title)
-    row.appendChild(stats)
-    row.appendChild(remove)
+    return row
+  }
 
-    // Navigate on click
+  private buildLeafRow(leaf: TreeLeaf, depth: number): HTMLElement {
+    const row = document.createElement('div')
+    row.className = 'doc-list-row doc-list-row--leaf'
+    if (leaf.path === this.currentDocId) row.classList.add('doc-list-row--active')
+    if (leaf.greyed) row.classList.add('doc-list-row--greyed')
+    row.dataset.docId = leaf.path
+    row.style.setProperty('--depth', String(depth))
+
+    const title = document.createElement('span')
+    title.className = 'doc-list-title'
+    title.textContent = leaf.label
+    title.title = leaf.path
+
+    row.appendChild(title)
+
+    if (!leaf.greyed) {
+      row.appendChild(this.buildStatsCell(leaf))
+    }
+
     row.addEventListener('click', () => {
-      if (this.onNavigate && entry.id !== this.currentDocId) {
-        this.onNavigate(entry.id)
+      if (this.onNavigate && leaf.path !== this.currentDocId) {
+        this.onNavigate(leaf.path)
       }
       if (!this.wide.matches) this.close()
     })
 
     return row
+  }
+
+  /** Stats cell doubles as the two-click reset control. */
+  private buildStatsCell(leaf: TreeLeaf): HTMLElement {
+    const stats = document.createElement('span')
+    stats.className = 'doc-list-stats'
+    const idle = `${leaf.stats.position}/${leaf.stats.blockCount}  ${leaf.stats.attentionPct}%`
+    stats.textContent = idle
+
+    let armed = false
+    let timer: number | undefined
+    const disarm = () => {
+      armed = false
+      stats.textContent = idle
+      stats.classList.remove('doc-list-stats--armed')
+      if (timer !== undefined) { clearTimeout(timer); timer = undefined }
+    }
+
+    stats.addEventListener('click', async (e) => {
+      e.stopPropagation()  // don't trigger row navigate
+      if (!armed) {
+        armed = true
+        stats.textContent = 'reset?'
+        stats.classList.add('doc-list-stats--armed')
+        timer = window.setTimeout(disarm, 3000)
+        return
+      }
+      if (timer !== undefined) clearTimeout(timer)
+      await deleteDocumentData(leaf.path)
+      if (leaf.path === this.currentDocId) {
+        // Reset current doc cleanly via full reload (matches settings-reset)
+        window.scrollTo(0, 0)
+        location.reload()
+      } else {
+        await this.refresh()
+      }
+    })
+
+    return stats
   }
 
   private toggle(): void {
@@ -195,13 +318,6 @@ export class DocList {
     this.btn.textContent = CHEVRON_CLOSED
     document.body.appendChild(this.btn)  // return to fixed top-left
     document.body.classList.remove('doc-list-shifted')
-  }
-
-  private updateHighlight(): void {
-    for (const row of this.listEl.children) {
-      const el = row as HTMLElement
-      el.classList.toggle('doc-list-row--active', el.dataset.docId === this.currentDocId)
-    }
   }
 
   private buildButton(): HTMLButtonElement {
