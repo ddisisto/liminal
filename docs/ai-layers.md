@@ -48,6 +48,8 @@ Analytical overlays rendered against the conversation. Model-side signals — en
 
 This is where the user's subjective sense of "this mattered" meets the model's statistical reality. Convergence and divergence between the two are both informative.
 
+See [research/token-annotation-systems.md](research/token-annotation-systems.md) for prior art on annotation UX and per-token visualisation that informs L2 and L3.
+
 ### Layer 4 — Semantic Zoom
 Expansion and compression as a unified, bidirectional operation. The user can expand at any point — generating additional detail inline — or compress, collapsing a block into a summary. The conversation becomes a document with variable information density, shaped by what matters *now*.
 
