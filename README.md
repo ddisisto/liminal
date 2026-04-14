@@ -36,16 +36,27 @@ The [design philosophy](docs/design-philosophy.md) starts from a single principl
 
 This document is one node in a graph. The links below open other documents in the same reader — your reading position here is saved, attention carries across, and you can return anytime.
 
+**Principles** — the foundation everything else builds on
+
 - [Design philosophy](docs/design-philosophy.md) — the reading instrument, viewport ownership, content-intrinsic scaling
-- [AI layers](docs/ai-layers.md) — the layer model from pacing through attention to adaptive difficulty
 - [Attention ownership](docs/attention-ownership.md) — why your data belongs to you, and what opens up when you choose to share it
+
+**Vision** — what gets built on the foundation
+
+- [AI layers](docs/ai-layers.md) — the layer model from pacing through attention to adaptive difficulty
 - [Theory](docs/theory.md) — coupled oscillators, game theory, memetic acceleration at the reader-model boundary
+- [Semantic zoom](docs/semantic-zoom.md) — scaling content density to viewport (planned)
+
+**Build** — how it's put together
+
 - [Architecture](docs/architecture.md) — stack, schema, data flow
 - [Document model](docs/document-model.md) — how documents, blocks, and attention are structured
-- [Semantic zoom](docs/semantic-zoom.md) — scaling content density to viewport (planned)
 - [Settings](docs/settings.md) — the controls you can already use (try the cog, top right)
-- [Attention instrumentation research](docs/research/attention-instrumentation.md) — prior art in viewport tracking and engagement measurement
-- [Token annotation research](docs/research/token-annotation-systems.md) — prior art in per-token visualization and annotation UX
+
+**Research** — prior art surveyed during design
+
+- [Attention instrumentation](docs/research/attention-instrumentation.md) — viewport tracking and engagement measurement
+- [Token annotation systems](docs/research/token-annotation-systems.md) — per-token visualization and annotation UX
 
 Follow what's interesting. Return here when you need bearings.
 
