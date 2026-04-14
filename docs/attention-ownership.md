@@ -1,5 +1,7 @@
 # Attention Ownership
 
+*Builds on the reader-instrument principles in [design philosophy](design-philosophy.md) — viewport ownership is what makes honest attention measurement possible. See [AI layers](ai-layers.md) for what becomes possible when the reader chooses to share.*
+
 ## The inversion
 
 Content consumption on the internet is already deeply instrumented. Every scroll, pause, and click is tracked — but by the server, for the server's purposes, through means and to ends entirely opaque to the consumer. The reader is the subject of measurement, never the beneficiary.
@@ -38,13 +40,11 @@ This is speculative, but the direction is clear: attention data is already one o
 
 ## Relation to the layer model
 
-The [layer model](project-brief.md) maps onto attention ownership naturally:
+Each layer in the [AI layers vision](ai-layers.md#layer-model) adds resolution to the attention signal — and each layer's data belongs to the reader. The touchpoints:
 
-- **L0 (JIT pull):** The pull gesture is the most basic attention signal — "I'm ready for more." Its timing encodes reading pace.
-- **L1 (viewport time):** Direct attention measurement. Already implemented — IntersectionObserver tracks which blocks hold the reader's gaze.
-- **L2 (annotation):** Explicit reader signal layered on top of implicit attention.
-- **L3 (entropy/surprisal):** The text's own complexity becomes visible, contextualising the attention data.
-- **L5 (user model):** Accumulated attention patterns become a model of the reader — but one the reader owns and controls.
-- **L6 (adaptive phase boundary):** The system responds to attention in real time, adjusting content delivery to the reader's engagement.
-
-Each layer adds resolution to the attention signal, and each layer's data belongs to the reader.
+- **L0** — pull cadence is the most basic signal: "I'm ready for more." Its timing encodes reading pace.
+- **L1** — direct viewport-time measurement (live).
+- **L2** — explicit annotation layered on top of implicit attention.
+- **L3** — model-side entropy/surprisal contextualises what the reader was looking at.
+- **L5** — accumulated attention becomes a model of the reader — owned and controlled by them.
+- **L6** — the system responds to attention in real time, adjusting delivery to engagement.
