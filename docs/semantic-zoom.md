@@ -1,6 +1,6 @@
 # Semantic zoom
 
-*Extends the block-length scaling from the [design philosophy](design-philosophy.md). See [architecture plan](architecture-plan.md) for component context.*
+*Extends the block-length scaling from the [design philosophy](design-philosophy.md). See [architecture](architecture.md) for component context.*
 
 **Viewport-density-driven content scaling and collapse.**
 

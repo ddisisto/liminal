@@ -115,8 +115,8 @@ def seed_demo_session(db: Database) -> str:
 
     doc_files = [
         PROJECT_ROOT / "README.md",
-        DOCS_DIR / "project-brief.md",
-        DOCS_DIR / "architecture-plan.md",
+        DOCS_DIR / "ai-layers.md",
+        DOCS_DIR / "architecture.md",
         DOCS_DIR / "theory.md",
         DOCS_DIR / "research" / "attention-instrumentation.md",
         DOCS_DIR / "research" / "token-annotation-systems.md",

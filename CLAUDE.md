@@ -63,10 +63,10 @@ frontend/src/
 
 - `README.md` — root node: experiential intro, attention ownership pitch, document graph entry point
 - `docs/design-philosophy.md` — the reading instrument thesis, viewport ownership, pull-driven pacing, content-intrinsic scaling
-- `docs/project-brief.md` — conceptual design, layer model, design principles
+- `docs/ai-layers.md` — the AI layers vision built on the reading instrument: layer model, interference model, speculative intuitions
 - `docs/attention-ownership.md` — attention inversion thesis, reader ownership, sharing implications
 - `docs/theory.md` — coupled oscillator analogy, game theory, memetic acceleration
-- `docs/architecture-plan.md` — stack, schema, data flow, component boundaries, WebSocket protocol
+- `docs/architecture.md` — stack, schema, data flow, component boundaries, WebSocket protocol
 - `docs/document-model.md` — document/block/reading-session data model, IndexedDB + SQLite storage
 - `docs/semantic-zoom.md` — viewport-density-driven scaling and collapse (planned)
 - `docs/ui-settings-control.md` — settings panel design, controls inventory, interaction spec

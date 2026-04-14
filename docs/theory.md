@@ -2,7 +2,7 @@
 
 **The Attention Game: Inherited Strategies, Information Asymmetry, and the Dynamics of Human-Model Interaction**
 
-*Openly speculative where it needs to be. Formally grounded where it can be. A companion to the [design philosophy](design-philosophy.md), [AI layers vision](ai-layers.md), and [architecture document](architecture-plan.md).*
+*Openly speculative where it needs to be. Formally grounded where it can be. A companion to the [design philosophy](design-philosophy.md), [AI layers vision](ai-layers.md), and [architecture document](architecture.md).*
 
 ---
 
@@ -134,4 +134,4 @@ Liminal doesn't answer this question. It builds the instrument that lets you wat
 
 ---
 
-*This document is a living companion to the [AI layers vision](ai-layers.md) and [architecture document](architecture-plan.md). It is expected to evolve as the system is built, as attention data accumulates, and as the speculative claims are tested against observed behaviour. The distinction between defensible and speculative is maintained intentionally — collapsing it in either direction would be dishonest.*
+*This document is a living companion to the [AI layers vision](ai-layers.md) and [architecture document](architecture.md). It is expected to evolve as the system is built, as attention data accumulates, and as the speculative claims are tested against observed behaviour. The distinction between defensible and speculative is maintained intentionally — collapsing it in either direction would be dishonest.*

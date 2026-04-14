@@ -55,7 +55,7 @@ Expansion and compression as a unified, bidirectional operation. The user can ex
 
 Both operations preserve history: expansion forks rather than edits (maintaining sequence immutability), and compression is non-destructive — the original detail is always re-expandable. Attention decay can surface compression candidates where engagement has cooled, but compression is always user-confirmed, never automatic.
 
-This directly addresses context window management. Rather than truncation or uniform summarisation, the active context sent to the model is shaped by attention-weighted relevance. See the [architecture document](architecture-plan.md#data-flow-summary) for implementation detail on branch and compression flows.
+This directly addresses context window management. Rather than truncation or uniform summarisation, the active context sent to the model is shaped by attention-weighted relevance. See the [architecture document](architecture.md#data-flow-summary) for implementation detail on branch and compression flows.
 
 ### Layer 5 — The User Model
 A third predictive system that builds a model of the user's attention, preferences, and likely responses. This model can:
@@ -123,9 +123,9 @@ These are not yet formalised but are actively informing design decisions:
 
 ---
 
-## Next Phases
+## Roadmap
 
-See the [architecture document](architecture-plan.md#next-phases) for the current roadmap.
+The active roadmap and project state live in [CLAUDE.md](../CLAUDE.md) under "Current Priorities" and "Project State".
 
 ---
 

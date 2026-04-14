@@ -1,6 +1,6 @@
 # Settings panel
 
-*UI spec for the settings flyout. See [design philosophy](design-philosophy.md) for principles, [architecture plan](architecture-plan.md) for component boundaries.*
+*UI spec for the settings flyout. See [design philosophy](design-philosophy.md) for principles, [architecture](architecture.md) for component boundaries.*
 
 Cog icon (top-right) opens a flyout panel with live controls. All changes apply immediately.
 

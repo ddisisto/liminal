@@ -1,6 +1,6 @@
 # Document model
 
-*Part of the [architecture](architecture-plan.md). See also: [design philosophy](design-philosophy.md), [AI layers vision](ai-layers.md).*
+*Part of the [architecture](architecture.md). See also: [design philosophy](design-philosophy.md), [AI layers vision](ai-layers.md).*
 
 The core abstraction is a **document**, not a session or conversation. Everything the reader interacts with is a document. Chat is a special case where the document is still being written.
 
@@ -120,7 +120,7 @@ Already implemented. Pace, gap, theme. These are reader preferences, not documen
 
 ## The document graph
 
-Documents are not isolated — they form a graph through links. A markdown document that links to `docs/architecture-plan.md` creates an edge in the graph. Following that link opens the target as another document in the reader's collection.
+Documents are not isolated — they form a graph through links. A markdown document that links to `docs/architecture.md` creates an edge in the graph. Following that link opens the target as another document in the reader's collection.
 
 ### Navigation model
 

@@ -54,7 +54,7 @@ This means the system must treat session state as first-class data. Not just wha
 
 These principles hold for any text. A static article rendered through this system would still benefit from pull-driven pacing, block-length scaling, viewport ownership, and session persistence. The reading instrument works before any intelligence is added.
 
-The AI layers described in the [project brief](project-brief.md) build on this foundation:
+The AI layers described in the [AI layers vision](ai-layers.md) build on this foundation:
 
 - **JIT inference** (Layer 0) replaces static content with live generation — but the pull mechanic is the same.
 - **Attention capture** (Layer 1) is possible *because* the viewport is reader-owned and the pull cadence is honest — the signals aren't contaminated by system-initiated scrolling.
