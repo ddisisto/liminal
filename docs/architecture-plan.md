@@ -8,7 +8,7 @@
 
 Liminal is an attention instrument: a self-hosted, browser-based reading and conversation interface with passive attention instrumentation and progressive analytical depth. The core abstraction is the **document** — an immutable, ordered sequence of blocks. Chat is a special case where the document is still being written. See [document-model.md](document-model.md) for the full data model.
 
-The architecture prioritises simplicity, low infrastructure overhead, and clean separation between concerns — while preserving room for the system to grow into the more speculative layers described in the [project brief](project-brief.md). The foundational design principles (viewport ownership, pull-driven pacing, content-intrinsic scaling) are described in the [design philosophy](design-philosophy.md).
+The architecture prioritises simplicity, low infrastructure overhead, and clean separation between concerns — while preserving room for the system to grow into the more speculative layers described in the [AI layers vision](ai-layers.md). The foundational design principles (viewport ownership, pull-driven pacing, content-intrinsic scaling) are described in the [design philosophy](design-philosophy.md).
 
 The system is single-user, local-first, and designed to run on modest hardware (NVIDIA GTX 1070, 8GB VRAM) during the prototyping phase.
 
@@ -46,7 +46,7 @@ The frontend is the sensing, rendering, and primary storage layer.
 
 **Document renderer** — streams tokens from the WebSocket (live chat) or loads from IndexedDB (stored documents) and renders them as per-token DOM elements. Block-length font scaling: short blocks are large/prominent, long blocks settle smaller. Markdown rendering toggle (raw tokens vs rendered).
 
-**Attention capture (L1)** — viewport time tracking via IntersectionObserver, gated by `visibilitychange`/`blur` for AFK detection. Per-block cumulative viewport time is maintained in-memory and exposed as a `--attention` CSS custom property (0→1), driving live visual warmth on block borders. Attention data persists to IndexedDB locally; sync to backend is opt-in. Finer-grained instrumentation (selection events via Selection API, copy events via clipboard API) is a future L2 concern.
+**Attention capture (L1)** — viewport time tracking via IntersectionObserver, gated by `visibilitychange`/`blur` for AFK detection. Per-block cumulative viewport time is maintained in-memory and exposed as a `--attention` CSS custom property (0→1), driving live visual warmth on block borders. Attention data persists to IndexedDB locally; sync to backend is opt-in. Finer-grained instrumentation (selection events via Selection API, copy events via clipboard API) is a future L2 concern. See [research/attention-instrumentation.md](research/attention-instrumentation.md) for prior art and signal validity.
 
 **Annotation interface** — on explicit user action (e.g. selecting text and invoking a minimal context menu), allows tagging a token range with a freeform label. This is the Layer 2 interaction — same gesture as passive selection but with intentional commitment. The UI for this should be near-invisible: a small floating input that appears at the selection point, accepts text, and vanishes.
 
@@ -56,7 +56,7 @@ The frontend is the sensing, rendering, and primary storage layer.
 
 ### JIT Inference and the Pull Primitive
 
-Generation is driven by a single repeating primitive: the client requests the next token sequence, passing stop conditions (`stop_tokens`, `max_tokens`) directly. The backend streams tokens until a stop condition fires, then waits. The client decides what to do next.
+This section describes the implementation of the pull mechanic whose rationale is given in the [design philosophy](design-philosophy.md#content-arrives-when-pulled). Generation is driven by a single repeating primitive: the client requests the next token sequence, passing stop conditions (`stop_tokens`, `max_tokens`) directly. The backend streams tokens until a stop condition fires, then waits. The client decides what to do next.
 
 ```
 Client → Backend:  { "sequence_id": "seq_abc123", "stop_tokens": ["\n\n"], "max_tokens": 512 }
@@ -74,7 +74,7 @@ This is JIT inference: generation is pulled by the reader's pace, not pushed by 
 
 This works identically for local inference (HF Transformers `stopping_criteria`) and API inference (`stop_tokens` + prefill), both standard alongside `logprobs` support. The schema is unaffected — sequences are bounded by EOS/BOS as before; a stop-token simply causes the boundary to occur sooner.
 
-**Viewport ownership principle**: The user owns the viewport. The system writes content; the user decides when and how to look at it. No auto-scrolling during streaming, no repositioning after content delivery. Each user action results in at most one immediate view change (e.g. End key scrolls to tip). This means content can stream in while the user reads earlier material undisturbed.
+**During streaming**: no auto-scroll, no repositioning. Content streams in while the reader engages with earlier material undisturbed. Each reader action results in at most one immediate view change (e.g. End key scrolls to tip).
 
 ### WebSocket Protocol
 
@@ -181,7 +181,7 @@ Sparse, high-signal. The user's deliberate marks on token ranges.
 
 **Raw storage, deferred analysis**: Attention events are stored as-is. Patterns, summaries, and derived signals are computed later — either on-demand or in batch. This avoids premature commitment to what matters before the data reveals it.
 
-**Progressive disclosure at every level**: As described in the [project brief](project-brief.md#progressive-disclosure-as-architecture), each layer is genuinely independent. The schema supports Layers 0–4 without requiring them. A fresh instance with no attention capture enabled is still a functional chat interface.
+**Progressive disclosure at every level**: As described in the [AI layers vision](ai-layers.md#progressive-disclosure-as-architecture), each layer is genuinely independent. The schema supports Layers 0–4 without requiring them. A fresh instance with no attention capture enabled is still a functional chat interface.
 
 **No premature optimisation of the user-model**: The third predictive system will emerge from the accumulated attention data. Its architecture depends on what that data reveals. For now, the schema captures the raw material. The model comes later.
 
@@ -210,19 +210,9 @@ See CLAUDE.md for the canonical module map. Key architectural boundaries:
 
 ---
 
-## Next Phases
+## Roadmap
 
-1. ~~**Research survey**~~ — done: attention instrumentation, token annotation systems.
-2. ~~**Layer 0–1 prototype**~~ — done: pull-driven delivery, per-token rendering, viewport-time attention capture with live visual feedback, settings panel with persistence.
-3. ~~**Document model + IndexedDB**~~ — done: frontend storage layer with documents, blocks, reading sessions, attention in IndexedDB. Settings persist to localStorage.
-4. ~~**Document reader**~~ — mostly done: content blocks, document graph navigation via links, browser history, resume mode. Session flyout and attention display pending. See [document-model.md](document-model.md#implementation-plan) for detailed plan.
-5. **Attention tracking improvements** — unseen block state, dead-zone handling, visual cue experiments, per-document attention display.
-6. **Document management** — import (paste, file, URL), remove. The reader builds their own document collection.
-7. **Conversations** — connect backend inference, chat as a live document type. Conversation fork from content documents. Session sync.
-8. **Layer 2–3 build** — annotation interface, entropy/surprisal overlay.
-9. **Layer 4 exploration** — inline expansion and compression.
-10. **Reflective layer** — RAG over the reader's document graph and attention history. Surface connections, suggest revisitations, generate reflections.
-11. **User-model research** — analyse accumulated attention data, design the third predictive system.
+The active roadmap and project state live in [CLAUDE.md](../CLAUDE.md) under "Current Priorities" and "Project State". This document describes how the system is built; what is built next is kept there so there is one canonical list that stays current.
 
 ---
 
