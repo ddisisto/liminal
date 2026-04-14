@@ -6,7 +6,7 @@
  * lazily: first from IndexedDB (prior visit), then parsed from
  * the bundle and stored.
  *
- * Document ID = repo-relative path (e.g. 'docs/architecture-plan.md').
+ * Document ID = repo-relative path (e.g. 'docs/architecture.md').
  */
 
 import type { TokenData } from './types'
@@ -69,7 +69,7 @@ function textToTurns(text: string): Turn[] {
 
 /**
  * Resolve a relative link href against the current document's path.
- * e.g. resolveLink('document-model.md', 'docs/architecture-plan.md')
+ * e.g. resolveLink('document-model.md', 'docs/architecture.md')
  *   → 'docs/document-model.md'
  */
 export function resolveLink(href: string, fromPath: string): string {

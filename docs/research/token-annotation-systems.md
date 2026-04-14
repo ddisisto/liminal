@@ -1,6 +1,6 @@
 # Token-Level Annotation and Visualization Systems for LLM Output
 
-*Research survey for Liminal's Layer 2 (annotation) and Layer 3 (analytical overlays). See [project brief](../project-brief.md) for the layer model.*
+*Research survey for Liminal's Layer 2 (annotation) and Layer 3 (analytical overlays). See [AI layers](../ai-layers.md) for the layer model.*
 
 Prior art in token-level visualization, annotation UX, and analytical overlays.
 

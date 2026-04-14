@@ -232,7 +232,7 @@ async function main() {
 
   // ── Open root document ──────────────────────────────────
 
-  // Check if URL has a doc path in the hash (e.g. #docs/architecture-plan.md)
+  // Check if URL has a doc path in the hash (e.g. #docs/architecture.md)
   const hashPath = location.hash.slice(1)
   const startPath = (hashPath && hasBundledDoc(hashPath)) ? hashPath : 'README.md'
 

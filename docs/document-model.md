@@ -1,6 +1,6 @@
 # Document model
 
-*Part of the [architecture](architecture-plan.md). See also: [design philosophy](design-philosophy.md), [project brief](project-brief.md).*
+*Part of the [architecture](architecture.md). See also: [design philosophy](design-philosophy.md), [AI layers](ai-layers.md).*
 
 The core abstraction is a **document**, not a session or conversation. Everything the reader interacts with is a document. Chat is a special case where the document is still being written.
 
@@ -120,7 +120,7 @@ Already implemented. Pace, gap, theme. These are reader preferences, not documen
 
 ## The document graph
 
-Documents are not isolated — they form a graph through links. A markdown document that links to `docs/architecture-plan.md` creates an edge in the graph. Following that link opens the target as another document in the reader's collection.
+Documents are not isolated — they form a graph through links. A markdown document that links to `docs/architecture.md` creates an edge in the graph. Following that link opens the target as another document in the reader's collection.
 
 ### Navigation model
 
@@ -189,28 +189,6 @@ The only difference between reading and chat is whether new blocks come from sto
 ### Future: reflective layer
 
 The document graph, combined with accumulated attention data, creates the substrate for a reflective RAG layer. The reader's attention patterns across documents — what they lingered on, what they linked between, what they returned to — form a semantic index that no external system has access to. A model with access to this index could surface connections, suggest revisitations, or generate reflections grounded in what the reader actually engaged with. This is speculative but architecturally straightforward: the data is already being captured, the graph structure already exists, the model just needs to read it.
-
-## Implementation plan
-
-### Phase 1: Document reader
-
-1. ~~**Strip mock conversation wrapper**~~ — done. All .md files bundled via Vite glob import, loaded as content blocks (role `content`). `documents.ts` replaces `mock.ts`.
-2. ~~**Delivery modes**~~ — done. Resume mode renders previously-seen blocks instantly on revisit, pull-driven resumes from last position. Open mode deferred.
-3. **Unseen block state** — dimmed + blue border for unread blocks. 1.5s viewport threshold before attention tracking begins. Transition animation on first real view. Part of broader attention tracking improvements.
-4. ~~**Link interception**~~ — done. Clicks on relative `.md` links resolve paths and hot-load target document. Browser back/forward via History API, hash URLs for direct links.
-5. ~~**Document switching**~~ — done. Reading position saved per document, timeline clears and rebuilds on switch, new reading session created per document.
-6. **Session flyout** — minimal UI for open documents list with reading positions. Per-document attention display (inline heatmap/histogram).
-
-### Phase 2: Document management
-
-7. **Import** — paste, file upload, URL fetch (client-side where CORS allows, backend when available).
-8. **Remove** — delete documents from IndexedDB.
-
-### Phase 3: Conversation (requires backend)
-
-9. **Inference connection** — backend streams tokens, frontend stores as live document.
-10. **Conversation fork** — start a chat from a content document, creating a linked node in the graph.
-11. **Session sync** — opt-in sync of documents and attention to backend.
 
 ## Open questions
 

@@ -1,6 +1,6 @@
 # Attention Instrumentation in Browser-Based Reading Interfaces
 
-*Research survey. See [attention ownership](../attention-ownership.md) for the thesis, [architecture plan](../architecture-plan.md) for implementation.*
+*Research survey. See [attention ownership](../attention-ownership.md) for the thesis, [architecture](../architecture.md) for implementation.*
 
 **Prior art, tools, technical considerations, and signal validity.**
 

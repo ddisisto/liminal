@@ -1,6 +1,6 @@
 # Liminal
 
-An attention instrument. Tracks and visualises the reader's own attention patterns — for the reader's benefit, not the server's. Works with any content: static text, uploaded documents, or generated conversation.
+An attention instrument. Tracks and visualises the reader's own attention patterns — for the reader's benefit, not the server's. Works with any content: static text, uploaded documents, and — eventually — model conversation.
 
 ## Project State
 
@@ -17,7 +17,7 @@ Attention tracking now has three visual states: unseen (dim + blue border, 1.5s 
 - **Attention ownership**: Attention data belongs to the reader. Captured locally, stored locally, never transmitted without consent. The reader benefits directly — visible reading history reduces cognitive load on revisitation. Sharing is opt-in: to authors, communities, or models.
 - **JIT pull**: Content is pulled by the reader, not pushed. The pull gesture ("I'm ready for more") and its timing are the primary attention signal. Works for any content source — static text, uploaded documents, or model inference.
 - **Text as temporal medium**: Every token has a birth moment, metabolic state (entropy/surprisal), and attention history. Per-token addressability is non-negotiable — each token is a discrete DOM element with data attributes.
-- **Document graph**: Documents link to each other, forming a navigable graph. Following a link hot-loads the target. Conversations fork from content documents. The graph is the navigation — no separate file browser needed.
+- **Document graph**: Documents link to each other, forming a navigable graph. Following a link hot-loads the target. Conversations will fork from content documents. The graph is the navigation — no separate file browser needed.
 - **Buffered vs streaming**: Stored documents render instantly (per-token spans, no animation). Live edge (chat) streams per-token with animation. The distinction maps to IndexedDB reads vs WebSocket inference.
 - **Layer model**: L0 (pull-driven pacing), L1 (attention capture from viewport time + pull cadence), L2 (annotation/tagging), L3 (entropy/surprisal overlays), L4 (semantic zoom), L5 (user model), L6 (adaptive phase boundary). L0-1 implemented.
 - **Document immutability**: Once tokens are written, they are never modified. All editing is branching.
@@ -63,13 +63,13 @@ frontend/src/
 
 - `README.md` — root node: experiential intro, attention ownership pitch, document graph entry point
 - `docs/design-philosophy.md` — the reading instrument thesis, viewport ownership, pull-driven pacing, content-intrinsic scaling
-- `docs/project-brief.md` — conceptual design, layer model, design principles
+- `docs/ai-layers.md` — the AI layers vision built on the reading instrument: layer model, interference model, speculative intuitions
 - `docs/attention-ownership.md` — attention inversion thesis, reader ownership, sharing implications
 - `docs/theory.md` — coupled oscillator analogy, game theory, memetic acceleration
-- `docs/architecture-plan.md` — stack, schema, data flow, component boundaries, WebSocket protocol
+- `docs/architecture.md` — stack, schema, data flow, component boundaries, WebSocket protocol
 - `docs/document-model.md` — document/block/reading-session data model, IndexedDB + SQLite storage
 - `docs/semantic-zoom.md` — viewport-density-driven scaling and collapse (planned)
-- `docs/ui-settings-control.md` — settings panel design, controls inventory, interaction spec
+- `docs/settings.md` — settings panel design, controls inventory, interaction spec
 - `docs/research/attention-instrumentation.md` — prior art and implementation priorities for attention capture
 - `docs/research/token-annotation-systems.md` — prior art for token visualization and annotation UX
 
