@@ -80,6 +80,10 @@ frontend/src/
 - Design decisions should be captured in the relevant doc, not scattered across code comments
 - When in doubt, prefer simplicity. One primitive over two. Fewer message types over more.
 
+## Workflow
+
+Functional work is tracked in GitHub issues. A session typically starts by picking an open issue (or capturing a curveball as a new one), then either chains into related issues that share context, opens planning discussion that produces more issues, picks up something unrelated, or wraps after closing the original. Issues are the unit of "what" — separating high-level requirements capture from the detailed planning and implementation that happens in-session. Use `gh issue` for everything: view, create, comment, close.
+
 ## Current Priorities
 
 1. Session flyout: open documents list with reading positions, per-document attention display (inline heatmap/histogram)

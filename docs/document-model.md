@@ -99,6 +99,7 @@ Token metadata is nullable throughout — user-authored tokens and imported text
 | viewportTime | number | Cumulative ms in viewport |
 | pullTime | timestamp? | When this block was pulled in |
 | visits | number | Times scrolled back to this block |
+| lastVisible | timestamp? | End of the most recent visibility interval — drives resume scroll restore |
 
 ### Backend: SQLite (sync layer)
 
@@ -138,7 +139,7 @@ Three modes of block delivery, all using the same rendering pipeline:
 
 **Pull-driven** (default for first read): every block waits for a pull gesture. The reader controls pacing completely. New blocks stream with per-token animation. This is the core reading experience.
 
-**Resume** (default on revisit): blocks 0..lastPosition render instantly (no pull, no animation), restoring the reader to where they left off. Pull-driven delivery resumes from there. Previously-seen blocks carry their accumulated attention warmth from IndexedDB.
+**Resume** (default on revisit): blocks 0..lastPosition render instantly (no pull, no animation), and the viewport scrolls to the block the reader most recently had in view (per `attention.lastVisible`) — not necessarily the delivery tip, so a reader who scrolled back up to follow a link returns to that link, not the document end. Pull-driven delivery resumes from the tip. Previously-seen blocks carry their accumulated attention warmth from IndexedDB.
 
 **Open**: all blocks render immediately on document open. The reader can scroll and zoom the entire document freely from the start. Useful for reference, browsing, or re-reading. This is a per-document option, not a global mode change.
 
