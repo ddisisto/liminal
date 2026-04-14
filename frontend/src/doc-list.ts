@@ -55,6 +55,8 @@ export class DocList {
   private collapsed = new Set<string>()
   /** Monotonic token: stale refreshes drop their DOM mutation. */
   private refreshToken = 0
+  /** Poll handle: live-refreshes stats while the panel is open. */
+  private pollTimer: number | undefined
 
   constructor() {
     this.panel = this.buildPanel()
@@ -309,6 +311,11 @@ export class DocList {
       document.body.classList.add('doc-list-shifted')
     }
     await this.refresh()
+    this.pollTimer = window.setInterval(() => {
+      // Skip while a reset is armed — refresh would clobber the 3s confirm window.
+      if (this.listEl.querySelector('.doc-list-stats--armed')) return
+      void this.refresh()
+    }, 1500)
   }
 
   private close(): void {
@@ -318,6 +325,10 @@ export class DocList {
     this.btn.textContent = CHEVRON_CLOSED
     document.body.appendChild(this.btn)  // return to fixed top-left
     document.body.classList.remove('doc-list-shifted')
+    if (this.pollTimer !== undefined) {
+      clearInterval(this.pollTimer)
+      this.pollTimer = undefined
+    }
   }
 
   private buildButton(): HTMLButtonElement {
