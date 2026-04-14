@@ -84,16 +84,16 @@ frontend/src/
 
 Functional work is tracked in GitHub issues. A session typically starts by picking an open issue (or capturing a curveball as a new one), then either chains into related issues that share context, opens planning discussion that produces more issues, picks up something unrelated, or wraps after closing the original. Issues are the unit of "what" — separating high-level requirements capture from the detailed planning and implementation that happens in-session. Use `gh issue` for everything: view, create, comment, close.
 
-## Current Priorities
+## Next Horizons
 
-1. Session flyout: open documents list with reading positions, per-document attention display (inline heatmap/histogram)
-2. Document graph polish: hover preview on links (planned), inline visited-link attention timeline (planned)
-3. Attention visual tuning: revisit warmth curves, thresholds, palette when L2-3 work introduces new visual layers
-4. Document management: import (paste, file, URL), remove
-5. Conversations: connect backend inference, chat as live document, conversation fork from content
-6. Layer 2-3: annotation interface, entropy/surprisal overlays
-7. Semantic zoom: viewport-density-driven scaling and collapse
-8. Reflective layer: RAG over document graph and attention history
+L0 (pull-driven pacing) and L1 (attention capture) are live. The forward direction, roughly in the order each unlocks the next:
+
+- **Conversations and inference.** Connect the deferred backend so chats become live documents streaming per-token, with fork-from-content producing a new doc in the same tree. The bridge from reading instrument to model interaction, and the thing that makes "document graph" include generated material.
+- **L2-3: annotation and overlays.** Reader-side tagging, plus entropy/surprisal visualisations as the first-party "why look at this token" signal.
+- **L4: semantic zoom.** Viewport-density-driven scaling and collapse, so long documents compress gracefully without losing per-token addressability.
+- **L5-6: reflective layer.** RAG over the reader's own document graph and attention history — the reader's accumulated context becomes the model's.
+
+These are horizons, not a backlog. For actionable work in the current session, run `gh issue list`.
 
 ## Dev Environment
 
