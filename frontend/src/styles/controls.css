@@ -32,7 +32,7 @@
 .pull-indicator {
   position: fixed;
   bottom: 80px;
-  left: 50%;
+  left: calc(50% + var(--doc-list-offset, 0px) / 2);
   transform: translateX(-50%);
   color: var(--fg-dim);
   font-size: 14px;
@@ -66,7 +66,7 @@
 #input-area {
   position: fixed;
   bottom: 0;
-  left: 0;
+  left: var(--doc-list-offset, 0);
   right: 0;
   padding: 12px 24px 16px;
   background: linear-gradient(transparent, var(--bg) 12px);

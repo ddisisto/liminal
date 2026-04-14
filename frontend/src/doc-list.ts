@@ -1,8 +1,8 @@
 /**
- * Document list flyout — shows all documents in IndexedDB with
- * reading progress and attention summary. Top-left trigger button,
- * side-pane on landscape, top-pane on portrait. Can be pinned to
- * shift main content.
+ * Document list — left-side panel with all documents in IndexedDB,
+ * reading progress and attention summary. Viewport-driven behaviour:
+ * wide viewports keep the panel open and shift content; narrow ones
+ * show it as an overlay that auto-closes on outside click.
  */
 
 import {
@@ -11,6 +11,9 @@ import {
 } from './store'
 
 const WARM_THRESHOLD_MS = 30000  // matches viewport-tracker
+const WIDE_MEDIA = '(min-width: 960px)'
+const CHEVRON_CLOSED = '\u22D7'  // ⋗
+const CHEVRON_OPEN = '\u22D6'    // ⋖
 
 export interface DocListEntry {
   id: string
@@ -25,30 +28,47 @@ type NavigateHandler = (docId: string) => void
 export class DocList {
   private btn: HTMLButtonElement
   private panel: HTMLElement
+  private header: HTMLElement
   private listEl: HTMLElement
   private open = false
-  private pinned = false
+  private wide: MediaQueryList
   private onNavigate: NavigateHandler | null = null
   private currentDocId: string | null = null
 
   constructor() {
-    this.btn = this.buildButton()
     this.panel = this.buildPanel()
+    this.header = this.panel.querySelector('.doc-list-header')!
     this.listEl = this.panel.querySelector('.doc-list-items')!
+    this.btn = this.buildButton()
 
-    document.body.appendChild(this.btn)
     document.body.appendChild(this.panel)
+    document.body.appendChild(this.btn)
 
-    this.btn.addEventListener('click', () => this.toggle())
-
-    // Close on outside click (unless pinned)
-    document.addEventListener('click', (e) => {
-      if (this.open && !this.pinned
-        && !this.panel.contains(e.target as Node)
-        && e.target !== this.btn) {
-        this.close()
-      }
+    this.btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      this.toggle()
     })
+
+    this.wide = window.matchMedia(WIDE_MEDIA)
+    this.wide.addEventListener('change', () => this.applyMode())
+    this.applyMode()
+
+    // Outside click closes only in narrow mode
+    document.addEventListener('click', (e) => {
+      if (!this.open || this.wide.matches) return
+      if (this.panel.contains(e.target as Node)) return
+      this.close()
+    })
+  }
+
+  private applyMode(): void {
+    if (this.wide.matches) {
+      if (!this.open) this.openPanel()
+      document.body.classList.add('doc-list-shifted')
+    } else {
+      document.body.classList.remove('doc-list-shifted')
+      if (this.open) this.close()
+    }
   }
 
   /** Register navigation callback. */
@@ -142,7 +162,7 @@ export class DocList {
       if (this.onNavigate && entry.id !== this.currentDocId) {
         this.onNavigate(entry.id)
       }
-      if (!this.pinned) this.close()
+      if (!this.wide.matches) this.close()
     })
 
     return row
@@ -160,15 +180,21 @@ export class DocList {
     this.open = true
     this.panel.classList.add('doc-list-panel--open')
     this.btn.classList.add('doc-list-btn--open')
+    this.btn.textContent = CHEVRON_OPEN
+    this.header.appendChild(this.btn)  // reparent into header
+    if (this.wide.matches) {
+      document.body.classList.add('doc-list-shifted')
+    }
     await this.refresh()
   }
 
   private close(): void {
     this.open = false
-    this.pinned = false
-    this.panel.classList.remove('doc-list-panel--open', 'doc-list-panel--pinned')
+    this.panel.classList.remove('doc-list-panel--open')
     this.btn.classList.remove('doc-list-btn--open')
-    document.getElementById('container')?.classList.remove('doc-list-pinned')
+    this.btn.textContent = CHEVRON_CLOSED
+    document.body.appendChild(this.btn)  // return to fixed top-left
+    document.body.classList.remove('doc-list-shifted')
   }
 
   private updateHighlight(): void {
@@ -182,7 +208,7 @@ export class DocList {
     const btn = document.createElement('button')
     btn.className = 'doc-list-btn'
     btn.title = 'Documents'
-    btn.innerHTML = '&#x2630;'  // hamburger ☰
+    btn.textContent = CHEVRON_CLOSED
     return btn
   }
 
@@ -190,27 +216,15 @@ export class DocList {
     const panel = document.createElement('div')
     panel.className = 'doc-list-panel'
 
-    // Header with pin toggle
+    // Header: hero title on the left; trigger button slots in on the right when open
     const header = document.createElement('div')
     header.className = 'doc-list-header'
 
-    const heading = document.createElement('span')
-    heading.className = 'doc-list-heading'
-    heading.textContent = 'documents'
+    const hero = document.createElement('span')
+    hero.className = 'doc-list-hero'
+    hero.textContent = 'liminal'
+    header.appendChild(hero)
 
-    const pin = document.createElement('button')
-    pin.className = 'doc-list-pin'
-    pin.title = 'Pin panel'
-    pin.innerHTML = '&#x1F4CC;'  // 📌
-    pin.addEventListener('click', () => {
-      this.pinned = !this.pinned
-      this.panel.classList.toggle('doc-list-panel--pinned', this.pinned)
-      pin.classList.toggle('doc-list-pin--active', this.pinned)
-      document.getElementById('container')?.classList.toggle('doc-list-pinned', this.pinned)
-    })
-
-    header.appendChild(heading)
-    header.appendChild(pin)
     panel.appendChild(header)
 
     // Scrollable list

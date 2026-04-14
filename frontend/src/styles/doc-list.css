@@ -1,4 +1,4 @@
-/* Document list — trigger button, panel, rows, pin, responsive */
+/* Document list — left-side panel, viewport-driven open/shift behaviour */
 
 .doc-list-btn {
   position: fixed;
@@ -16,14 +16,21 @@
   align-items: center;
   justify-content: center;
   z-index: 20;
+  line-height: 1;
 }
 
-.doc-list-btn:hover,
-.doc-list-btn--open {
+.doc-list-btn:hover {
   color: var(--fg-muted);
 }
 
-/* Panel — side-pane by default (landscape) */
+/* Inside the header when panel is open: static flow, no fixed positioning */
+.doc-list-header .doc-list-btn,
+.doc-list-btn--open {
+  position: static;
+  color: var(--fg-muted);
+}
+
+/* Panel — left side-pane, always */
 .doc-list-panel {
   position: fixed;
   top: 0;
@@ -36,70 +43,35 @@
   display: none;
   flex-direction: column;
   overflow: hidden;
-  transition: width 0.2s ease;
 }
 
 .doc-list-panel--open {
   display: flex;
 }
 
-/* Portrait: top-pane instead of side-pane */
-@media (orientation: portrait) {
-  .doc-list-panel {
-    width: 100%;
-    height: auto;
-    max-height: 50vh;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-/* Pinned state shifts main content */
-.doc-list-panel--pinned {
-  position: fixed;
-}
-
-#container.doc-list-pinned {
-  margin-left: 280px;
-}
-
-@media (orientation: portrait) {
-  #container.doc-list-pinned {
-    margin-left: 0;
-  }
+/* Wide viewports: reserve left space so #container and the fixed
+   input area recentre within the remaining viewport. --doc-list-offset
+   is consumed by body padding and by #input-area's `left`. */
+body.doc-list-shifted {
+  --doc-list-offset: 280px;
+  padding-left: var(--doc-list-offset);
 }
 
 .doc-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px 8px;
+  padding: 16px 16px 12px;
   flex-shrink: 0;
 }
 
-.doc-list-heading {
-  font-size: 12px;
+/* Hero title — small version of the main page hero */
+.doc-list-hero {
+  font-size: 1rem;
+  font-weight: 200;
   color: var(--fg-muted);
-  letter-spacing: 0.05em;
-}
-
-.doc-list-pin {
-  background: none;
-  border: none;
-  font-size: 14px;
-  cursor: pointer;
-  opacity: 0.4;
-  transition: opacity 0.15s;
-  padding: 2px;
-  line-height: 1;
-}
-
-.doc-list-pin:hover {
-  opacity: 0.7;
-}
-
-.doc-list-pin--active {
-  opacity: 1;
+  letter-spacing: 0.3em;
+  text-transform: lowercase;
 }
 
 .doc-list-items {
