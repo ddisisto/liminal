@@ -102,7 +102,7 @@ async function main() {
     currentPath = doc.path
     settings.currentDocId = doc.documentId
     docList.setCurrentDoc(doc.documentId)
-    const { turns, readingSessionId, lastPosition } = doc
+    const { turns, readingSessionId, lastPosition, lastViewedBlock } = doc
 
     // Clear and reset
     timeline.clear()
@@ -121,21 +121,27 @@ async function main() {
     // Resume: render previously-seen blocks instantly
     const resumePoint = Math.min(lastPosition, turns.length)
     if (resumePoint > 0) {
+      const blockEls: HTMLElement[] = []
       for (let i = 0; i < resumePoint; i++) {
         const turn = turns[i]
         const { block, index } = timeline.addBlock(turn.role)
         tracker.track(block.element, block.id, true)  // seen: resumed blocks
         timeline.renderBuffered(index, turn.tokens, turn.text)
         timeline.renderIfActive(index)
+        blockEls.push(block.element)
       }
       nextTurn = resumePoint
       console.log(`[liminal] resumed: ${resumePoint} blocks rendered instantly`)
 
-      // Restore scroll to the tip so the last-read block sits where it would
-      // if the reader had just pulled it in, rather than leaving the viewport
-      // at the top of the doc. rAF waits for layout after the buffered render.
+      // Restore scroll: prefer the block the reader last had in view (per
+      // attention.lastVisible). Falls back to the tip if no attention exists
+      // yet — first revisit after the very first read. rAF waits for layout.
       await new Promise(r => requestAnimationFrame(() => r(null)))
-      viewport.scrollToTip()
+      if (lastViewedBlock !== undefined && lastViewedBlock < blockEls.length) {
+        blockEls[lastViewedBlock].scrollIntoView({ block: 'center', behavior: 'auto' })
+      } else {
+        viewport.scrollToTip()
+      }
     }
 
     statusEl.textContent = resumePoint > 0

@@ -56,6 +56,7 @@ export interface AttentionRecord {
   blockIndex: number
   viewportTime: number // cumulative ms
   visits: number
+  lastVisible?: number // Date.now() of the most recent visibility interval end
 }
 
 // Composite key for attention: [sessionId, blockIndex]
@@ -318,4 +319,28 @@ export async function getDocumentAttention(docId: string): Promise<Map<number, n
   }
 
   return totals
+}
+
+/**
+ * Find the block the reader most recently had in view across all prior
+ * sessions for a document. Returns undefined if no attention recorded yet.
+ */
+export async function getLastViewedBlock(docId: string): Promise<number | undefined> {
+  const sessions = await getSessionsForDoc(docId)
+  if (sessions.length === 0) return undefined
+  const sessionIds = new Set(sessions.map(s => s.id))
+
+  const db = await getDb()
+  const all: AttentionRecord[] = await req(
+    db.transaction('attention').objectStore('attention').getAll(),
+  )
+
+  let bestIndex: number | undefined
+  let bestTime = 0
+  for (const rec of all) {
+    if (!sessionIds.has(rec.sessionId)) continue
+    const t = rec.lastVisible ?? 0
+    if (t > bestTime) { bestTime = t; bestIndex = rec.blockIndex }
+  }
+  return bestIndex
 }

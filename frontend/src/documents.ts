@@ -13,7 +13,7 @@ import type { TokenData } from './types'
 import { mockTokens } from './stream'
 import {
   getDocument, putDocument, getBlocks, putBlocks,
-  putReadingSession, getLatestSession, updateSessionPosition,
+  putReadingSession, getLatestSession, updateSessionPosition, getLastViewedBlock,
   deleteDocumentData,
   type StoredDocument, type StoredBlock,
 } from './store'
@@ -117,6 +117,7 @@ export interface DocumentSession {
   path: string
   readingSessionId: string
   lastPosition: number
+  lastViewedBlock?: number
 }
 
 /**
@@ -164,8 +165,9 @@ export async function openDocument(path: string): Promise<DocumentSession | null
           position: lastPosition,
         })
 
+        const lastViewedBlock = await getLastViewedBlock(docId)
         console.log(`[liminal] opened from IndexedDB: ${path} (${blocks.length} blocks, position ${lastPosition})`)
-        return { turns, documentId: docId, path, readingSessionId, lastPosition }
+        return { turns, documentId: docId, path, readingSessionId, lastPosition, lastViewedBlock }
       }
     } else if (existing) {
       console.log(`[liminal] stale cache for ${path} — wiping and re-importing`)
@@ -205,8 +207,9 @@ export async function openDocument(path: string): Promise<DocumentSession | null
     position: lastPosition,
   })
 
+  const lastViewedBlock = await getLastViewedBlock(docId)
   console.log(`[liminal] opened from IndexedDB: ${path} (${blocks.length} blocks, position ${lastPosition})`)
-  return { turns, documentId: docId, path, readingSessionId, lastPosition }
+  return { turns, documentId: docId, path, readingSessionId, lastPosition, lastViewedBlock }
 }
 
 async function importFromBundle(path: string, raw: string, version: string): Promise<DocumentSession> {

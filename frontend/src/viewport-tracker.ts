@@ -27,6 +27,7 @@ interface TrackedBlock {
   dirty: boolean               // needs persisting to IndexedDB
   seen: boolean                // has crossed the visibility threshold
   seenAccum: number            // ms accumulated toward the seen threshold (across visibility gaps)
+  lastVisible: number          // Date.now() of last visibility end (0 if never)
 }
 
 const BATCH_INTERVAL_MS = 5000
@@ -90,6 +91,7 @@ export class ViewportTracker {
       blockId, blockIndex, element, visibleSince: null,
       totalMs: priorMs, visits: 0, dirty: false,
       seen: isSeen, seenAccum: isSeen ? SEEN_THRESHOLD_MS : 0,
+      lastVisible: 0,
     }
     const attention = Math.min(1, priorMs / WARM_THRESHOLD_MS)
     element.style.setProperty('--attention', attention.toFixed(3))
@@ -173,6 +175,8 @@ export class ViewportTracker {
     if (block.visibleSince === null) return
     const duration = now - block.visibleSince
     block.visibleSince = null
+    block.lastVisible = now
+    block.dirty = true
 
     // Unseen blocks: accumulate toward seen threshold but don't record attention
     if (!block.seen) {
@@ -251,6 +255,7 @@ export class ViewportTracker {
         blockIndex: b.blockIndex,
         viewportTime: b.totalMs,
         visits: b.visits,
+        lastVisible: b.lastVisible || undefined,
       }))
       putAttentionBatch(records).catch(() => {})
       for (const b of dirtyBlocks) b.dirty = false
