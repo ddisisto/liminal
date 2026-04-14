@@ -1,20 +1,22 @@
-# Liminal — Project Brief
+# Liminal — AI Layers
 
-**A conversational interface that instruments human attention to create a co-evolutionary environment between user and model.**
+**What the reading instrument becomes when inference, analytical overlays, and adaptive feedback are layered on top of it.**
 
 ---
 
 ## The Premise
 
-People already signal what matters to them as they read. They select text, pause, re-read, copy, scroll back. These gestures carry rich information about where meaning lands — but current conversational AI treats them as invisible. The interaction model remains: user types, model responds, repeat.
+The [reading instrument](design-philosophy.md) is the foundation: pull-driven pacing, viewport ownership, content-intrinsic scaling, session continuity. Those principles hold for any text, independent of AI, and they are what this document builds on.
 
-Liminal begins from the observation that this discards most of the signal. The project proposes an interface that captures the natural gestures of reading and attention, progressively layers analytical and creative tooling on top, and ultimately enables a dynamic where user and model are continuously updating their models of each other — with the quality of interaction measured by the richness of the boundary between them.
+What follows is the forward vision — what becomes possible when intelligence is added to a foundation whose signals are already honest. Every layer described below piggybacks on gestures the reader is already making: the pull cadence, the dwell, the scroll-back, the selection. No new interaction model is introduced; each layer reads further into the same behaviour.
+
+Current conversational AI discards most of this signal. The interaction model is: user types, model responds, repeat. Liminal begins from the observation that reading itself already produces a rich attention signal, and a reading-first architecture lets that signal flow back into generation, analysis, and adaptation. The endpoint is a co-evolutionary environment where user and model continuously update their models of each other, and the quality of interaction is measured by the richness of the boundary between them.
 
 ---
 
 ## Design Principles
 
-The foundational principles — viewport ownership, pull-driven pacing, content signalling its own role, session continuity — are described in the [design philosophy](design-philosophy.md). These hold for any text, independent of AI. The principles below are specific to Liminal's AI layers.
+The principles below are specific to the AI layers. They assume the reading-instrument principles from the [design philosophy](design-philosophy.md) as given.
 
 ### Piggyback, don't invent
 The foundational interaction — scrolling through text — is already habitual and universal. The system instruments this existing behaviour rather than introducing new ones. There is no onboarding. If you can read, you're already using it.
