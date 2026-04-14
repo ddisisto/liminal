@@ -2,7 +2,7 @@
 
 **The Attention Game: Inherited Strategies, Information Asymmetry, and the Dynamics of Human-Model Interaction**
 
-*Openly speculative where it needs to be. Formally grounded where it can be. A companion to the [design philosophy](design-philosophy.md), [AI layers vision](ai-layers.md), and [architecture document](architecture.md).*
+*Openly speculative where it needs to be. Formally grounded where it can be. A companion to the [design philosophy](design-philosophy.md), [AI layers](ai-layers.md), and [architecture document](architecture.md).*
 
 ---
 
@@ -62,7 +62,7 @@ This asymmetry is not incidental to engagement optimisation — it is *structura
 
 Liminal's core intervention is to reduce this asymmetry on both sides simultaneously:
 
-- **Model → User transparency**: Entropy, surprisal, and top-k alternatives make the model's internal states visible. The user can see not just what the model said but what it considered, how confident it was, and where it was relying on prior patterns versus navigating genuine uncertainty. (Deeper signals like attention weights are a future interpretability direction — see the [AI layers vision](ai-layers.md#open-questions-and-upstream-dependencies) for open questions.)
+- **Model → User transparency**: Entropy, surprisal, and top-k alternatives make the model's internal states visible. The user can see not just what the model said but what it considered, how confident it was, and where it was relying on prior patterns versus navigating genuine uncertainty. (Deeper signals like attention weights are a future interpretability direction — see the [AI layers](ai-layers.md#open-questions-and-upstream-dependencies) for open questions.)
 
 - **User → Model legibility**: Attention capture, selection events, annotations, and the user-model's predictions make the user's cognitive engagement visible to the system — not as coarse feedback (thumbs up, thumbs down) but as a continuous, granular signal.
 
@@ -80,7 +80,7 @@ This is the coupled-oscillator argument restated in strategic terms: transparenc
 
 ## The User-Model as Proxy and Audit
 
-The introduction of the user-model ([Layer 5 in the AI layers vision](ai-layers.md#layer-5--the-user-model)) creates a distinctive strategic structure.
+The introduction of the user-model ([Layer 5 in the AI layers](ai-layers.md#layer-5--the-user-model)) creates a distinctive strategic structure.
 
 The user-model is trained on accumulated attention data — selections, dwell patterns, annotations, copy events, deviations from predicted behaviour. Its function is to predict what the user will attend to, select, or want next. This prediction can serve two purposes:
 
@@ -98,7 +98,7 @@ The mechanism works only if the user retains the capacity to deviate — if the 
 
 ## Memetic Acceleration and the Compression of Strategy Space
 
-The broader context for all of the above is the observation from the [AI layers vision](ai-layers.md#speculative-load-bearing-intuitions): memetic acceleration is a condition already in motion. Ideas, framings, rhetorical strategies, and behavioural templates propagate and mutate faster in AI-mediated interaction than in any prior communication medium.
+The broader context for all of the above is the observation from the [AI layers](ai-layers.md#speculative-load-bearing-intuitions): memetic acceleration is a condition already in motion. Ideas, framings, rhetorical strategies, and behavioural templates propagate and mutate faster in AI-mediated interaction than in any prior communication medium.
 
 The game-theoretic lens clarifies why. In a traditional attention economy, strategy evolution is slow because feedback loops are long — a writer publishes, readers respond over days or weeks, the writer adapts. In AI-mediated interaction, the feedback loop is measured in seconds. The model generates, the user attends (or doesn't), the next generation is shaped by what worked. If the user-model is active, the adaptation is even faster — the system predicts and pre-adapts before the user has consciously responded.
 
@@ -134,4 +134,4 @@ Liminal doesn't answer this question. It builds the instrument that lets you wat
 
 ---
 
-*This document is a living companion to the [AI layers vision](ai-layers.md) and [architecture document](architecture.md). It is expected to evolve as the system is built, as attention data accumulates, and as the speculative claims are tested against observed behaviour. The distinction between defensible and speculative is maintained intentionally — collapsing it in either direction would be dishonest.*
+*This document is a living companion to the [AI layers](ai-layers.md) and [architecture document](architecture.md). It is expected to evolve as the system is built, as attention data accumulates, and as the speculative claims are tested against observed behaviour. The distinction between defensible and speculative is maintained intentionally — collapsing it in either direction would be dishonest.*

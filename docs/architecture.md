@@ -8,7 +8,7 @@
 
 Liminal is an attention instrument: a self-hosted, browser-based reading and conversation interface with passive attention instrumentation and progressive analytical depth. The core abstraction is the **document** — an immutable, ordered sequence of blocks. Chat is a special case where the document is still being written. See [document-model.md](document-model.md) for the full data model.
 
-The architecture prioritises simplicity, low infrastructure overhead, and clean separation between concerns — while preserving room for the system to grow into the more speculative layers described in the [AI layers vision](ai-layers.md). The foundational design principles (viewport ownership, pull-driven pacing, content-intrinsic scaling) are described in the [design philosophy](design-philosophy.md).
+The architecture prioritises simplicity, low infrastructure overhead, and clean separation between concerns — while preserving room for the system to grow into the more speculative layers described in [AI layers](ai-layers.md). The foundational design principles (viewport ownership, pull-driven pacing, content-intrinsic scaling) are described in the [design philosophy](design-philosophy.md).
 
 The system is single-user, local-first, and designed to run on modest hardware (NVIDIA GTX 1070, 8GB VRAM) during the prototyping phase.
 
@@ -181,7 +181,7 @@ Sparse, high-signal. The user's deliberate marks on token ranges.
 
 **Raw storage, deferred analysis**: Attention events are stored as-is. Patterns, summaries, and derived signals are computed later — either on-demand or in batch. This avoids premature commitment to what matters before the data reveals it.
 
-**Progressive disclosure at every level**: As described in the [AI layers vision](ai-layers.md#progressive-disclosure-as-architecture), each layer is genuinely independent. The schema supports Layers 0–4 without requiring them. A fresh instance with no attention capture enabled is still a functional chat interface.
+**Progressive disclosure at every level**: As described in [AI layers](ai-layers.md#progressive-disclosure-as-architecture), each layer is genuinely independent. The schema supports Layers 0–4 without requiring them. A fresh instance with no attention capture enabled is still a functional chat interface.
 
 **No premature optimisation of the user-model**: The third predictive system will emerge from the accumulated attention data. Its architecture depends on what that data reveals. For now, the schema captures the raw material. The model comes later.
 

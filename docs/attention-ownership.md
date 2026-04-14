@@ -40,7 +40,7 @@ This is speculative, but the direction is clear: attention data is already one o
 
 ## Relation to the layer model
 
-Each layer in the [AI layers vision](ai-layers.md#layer-model) adds resolution to the attention signal — and each layer's data belongs to the reader. The touchpoints:
+Each layer in [AI layers](ai-layers.md#layer-model) adds resolution to the attention signal — and each layer's data belongs to the reader. The touchpoints:
 
 - **L0** — pull cadence is the most basic signal: "I'm ready for more." Its timing encodes reading pace.
 - **L1** — direct viewport-time measurement (live).

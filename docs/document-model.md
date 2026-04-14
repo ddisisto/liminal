@@ -1,6 +1,6 @@
 # Document model
 
-*Part of the [architecture](architecture.md). See also: [design philosophy](design-philosophy.md), [AI layers vision](ai-layers.md).*
+*Part of the [architecture](architecture.md). See also: [design philosophy](design-philosophy.md), [AI layers](ai-layers.md).*
 
 The core abstraction is a **document**, not a session or conversation. Everything the reader interacts with is a document. Chat is a special case where the document is still being written.
 
