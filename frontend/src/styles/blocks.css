@@ -2,57 +2,56 @@
 
 .block {
   margin-bottom: 16px;
-  padding: 8px 0;
+  padding: 8px 0 8px 12px;
   white-space: pre-wrap;
   --attention: 0;
-  transition: opacity 600ms ease, border-left-color 600ms ease, background 300ms ease;
-}
-
-.block:hover {
-  opacity: 1 !important;
-  border-left-width: 4px;
-  padding-left: 10px;
+  /* Block accent colour — drives both the border and the active-state
+     inset shadow, so they always match. Unseen blocks override this
+     with the blue anchor. */
+  --block-accent: color-mix(
+    in oklch,
+    var(--attn-cold),
+    var(--attn-warm) calc(var(--attention) * 100%)
+  );
+  /* Baseline: dim. Undimmed only when in viewport or hovered. */
+  opacity: var(--fg-unseen);
+  border-left: 2px solid var(--block-accent);
+  transition:
+    opacity 600ms ease,
+    border-left-color 600ms ease,
+    box-shadow 200ms ease;
 }
 
 .block--rendered {
   white-space: normal;
 }
 
-.block--assistant,
-.block--content {
-  border-left: 2px solid color-mix(
-    in oklch,
-    var(--border-mid),
-    var(--border-attn) calc(var(--attention) * 100%)
-  );
-  padding-left: 12px;
-}
-
 .block--user {
-  border-left: 2px solid color-mix(
-    in oklch,
-    var(--border-user),
-    var(--border-attn) calc(var(--attention) * 100%)
-  );
-  padding-left: 12px;
   color: var(--fg-user);
 }
 
-/* Unseen: never crossed visibility threshold — dim + blue border */
+/* Unseen: never crossed visibility threshold — blue anchor overrides warmth */
 .block--unseen {
-  opacity: var(--fg-unseen);
-  border-left-color: var(--border-unseen) !important;
+  --block-accent: var(--border-unseen);
 }
 
 .block--unseen.block--user {
   color: color-mix(in oklch, var(--fg-user), var(--border-unseen) 40%);
 }
 
-/* Currently in viewport and being tracked */
-.block--in-viewport {
-  border-left-width: 3px;
-  padding-left: 11px;  /* compensate for wider border */
-  background: color-mix(in oklch, var(--bg), var(--border-attn) 5%);
+/* Active: currently in viewport, or hovered. Undim and show an inset
+   marker in the block's accent colour. Inset shadow doesn't affect the
+   box model, so there's no layout jitter on state transitions. */
+.block--in-viewport,
+.block:hover {
+  opacity: 1;
+  box-shadow: inset 3px 0 0 var(--block-accent);
+}
+
+.block:hover {
+  box-shadow:
+    inset 3px 0 0 var(--block-accent),
+    inset 0 1px 0 var(--block-accent);
 }
 
 /* Tokens */

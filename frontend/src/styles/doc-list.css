@@ -97,7 +97,7 @@ body.doc-list-shifted {
 }
 
 .doc-list-row--active {
-  background: color-mix(in oklch, var(--border), var(--border-attn) 20%);
+  background: color-mix(in oklch, var(--border), var(--attn-warm) 20%);
 }
 
 .doc-list-row--greyed {

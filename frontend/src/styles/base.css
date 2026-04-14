@@ -16,7 +16,6 @@
   --accent-hover: #8080a0;
   --border: #1a1a25;
   --border-mid: #2a2a35;
-  --border-user: #3a5a3a;
   --fg-user: #a0c0a0;
   --surface: #101018;
   --surface-code: #12121a;
@@ -24,9 +23,10 @@
   --fg-em: #b0b0b8;
   --fg-heading: #909098;
   --border-focus: #2a2a45;
-  --border-attn: #6a5030;   /* warm amber — attention target */
+  --attn-cold: #9aa068;     /* desaturated greenish-yellow — low attention */
+  --attn-warm: #8a2830;     /* medium-dark red — full attention */
   --border-unseen: #2a3a5a; /* blue tint — unseen blocks */
-  --fg-unseen: 0.4;         /* opacity for unseen blocks */
+  --fg-unseen: 0.4;         /* opacity for dimmed blocks (unseen + post-viewport) */
 }
 
 [data-theme="light"] {
@@ -40,7 +40,6 @@
   --accent-hover: #404060;
   --border: #d8d8e0;
   --border-mid: #c8c8d0;
-  --border-user: #7aaa7a;
   --fg-user: #3a6a3a;
   --surface: #eaeae5;
   --surface-code: #e4e4df;
@@ -48,9 +47,10 @@
   --fg-em: #3a3a42;
   --fg-heading: #4a4a52;
   --border-focus: #a0a0b8;
-  --border-attn: #c09050;   /* warm amber for light theme */
+  --attn-cold: #98a060;     /* desaturated greenish-yellow — low attention */
+  --attn-warm: #a04040;     /* medium-dark red — full attention */
   --border-unseen: #7090c0; /* blue tint — unseen blocks */
-  --fg-unseen: 0.45;        /* opacity for unseen blocks */
+  --fg-unseen: 0.45;        /* opacity for dimmed blocks (unseen + post-viewport) */
 }
 
 body {
