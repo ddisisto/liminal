@@ -20,6 +20,14 @@ export function blockLengthScale(
 const BLOCK_SCALE_MAX = 1.3
 const BLOCK_SCALE_MIN = 0.85
 
+function countFenceLines(text: string): number {
+  let n = 0
+  for (const line of text.split('\n')) {
+    if (line.trimStart().startsWith('```')) n++
+  }
+  return n
+}
+
 let nextId = 0
 
 export class Timeline {
@@ -144,9 +152,10 @@ export class Timeline {
 
     this._rendered = rendered
 
-    for (const block of this.blocks) {
+    for (let i = 0; i < this.blocks.length; i++) {
+      const block = this.blocks[i]
       if (rendered) {
-        this.renderBlock(block)
+        this.renderBlock(block, i)
       } else {
         this.restoreBlock(block)
       }
@@ -182,11 +191,11 @@ export class Timeline {
   renderIfActive(blockIndex: number): void {
     const block = this.blocks[blockIndex]
     if (block && this._rendered) {
-      this.renderBlock(block)
+      this.renderBlock(block, blockIndex)
     }
   }
 
-  private renderBlock(block: Block): void {
+  private renderBlock(block: Block, blockIndex: number): void {
     // Save current token-span DOM
     const frag = document.createDocumentFragment()
     while (block.element.firstChild) {
@@ -197,8 +206,27 @@ export class Timeline {
     if (block.role === 'user') {
       block.element.textContent = block.rawText
     } else {
-      block.element.innerHTML = renderMarkdown(block.rawText)
+      // Triple-backtick fences can span block boundaries because the
+      // paragraph splitter cuts on \n\n. Re-balance each block in
+      // isolation by wrapping with synthetic fences when needed, so the
+      // markdown renderer always sees a balanced segment.
+      const startsInFence = this.blockStartsInFence(blockIndex)
+      const fenceCount = countFenceLines(block.rawText)
+      const endsInFence = startsInFence !== (fenceCount % 2 === 1)
+      let text = block.rawText
+      if (startsInFence) text = '```\n' + text
+      if (endsInFence) text = text + '\n```'
+      block.element.innerHTML = renderMarkdown(text)
     }
+  }
+
+  /** True if a fenced code block opened in a prior block is still open here. */
+  private blockStartsInFence(blockIndex: number): boolean {
+    let count = 0
+    for (let i = 0; i < blockIndex; i++) {
+      count += countFenceLines(this.blocks[i].rawText)
+    }
+    return count % 2 === 1
   }
 
   private restoreBlock(block: Block): void {
