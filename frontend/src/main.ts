@@ -130,6 +130,12 @@ async function main() {
       }
       nextTurn = resumePoint
       console.log(`[liminal] resumed: ${resumePoint} blocks rendered instantly`)
+
+      // Restore scroll to the tip so the last-read block sits where it would
+      // if the reader had just pulled it in, rather than leaving the viewport
+      // at the top of the doc. rAF waits for layout after the buffered render.
+      await new Promise(r => requestAnimationFrame(() => r(null)))
+      viewport.scrollToTip()
     }
 
     statusEl.textContent = resumePoint > 0
