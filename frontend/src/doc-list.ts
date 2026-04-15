@@ -50,6 +50,8 @@ export class DocList {
   private open = false
   private wide: MediaQueryList
   private onNavigate: NavigateHandler | null = null
+  /** Optional pre-refresh hook: called (and awaited) before each panel refresh. */
+  private refreshHook: (() => Promise<void> | void) | null = null
   private currentDocId: string | null = null
   /** Folder keys currently collapsed. Default: everything expanded. */
   private collapsed = new Set<string>()
@@ -99,6 +101,11 @@ export class DocList {
     this.onNavigate = fn
   }
 
+  /** Register a hook called before each refresh (e.g. to flush live attention). */
+  setRefreshHook(fn: (() => Promise<void> | void) | null): void {
+    this.refreshHook = fn
+  }
+
   /** Set the currently active document (for highlighting + stats refresh). */
   setCurrentDoc(docId: string): void {
     this.currentDocId = docId
@@ -110,6 +117,10 @@ export class DocList {
   /** Rebuild the tree from the bundle + IndexedDB stats. */
   async refresh(): Promise<void> {
     const token = ++this.refreshToken
+    if (this.refreshHook) {
+      try { await this.refreshHook() } catch {}
+      if (token !== this.refreshToken) return
+    }
     const paths = listBundledDocs()
     const leaves = await Promise.all(paths.map(p => this.buildLeaf(p)))
     if (token !== this.refreshToken) return  // superseded by a newer refresh
@@ -315,7 +326,7 @@ export class DocList {
       // Skip while a reset is armed — refresh would clobber the 3s confirm window.
       if (this.listEl.querySelector('.doc-list-stats--armed')) return
       void this.refresh()
-    }, 1500)
+    }, 1000)
   }
 
   private close(): void {

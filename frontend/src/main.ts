@@ -82,6 +82,10 @@ async function main() {
 
   const docList = new DocList()
   docList.onNavigateHandler((docId) => navigate(docId, true))
+  // Flush the active tracker before each refresh so the panel sees live
+  // attention accumulated during the current visit, not just the last
+  // periodic batch write.
+  docList.setRefreshHook(async () => { if (tracker) await tracker.flush() })
 
   // ── Document reading loop ───────────────────────────────
 

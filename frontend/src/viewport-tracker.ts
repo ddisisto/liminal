@@ -69,13 +69,13 @@ export class ViewportTracker {
     window.addEventListener('focus', () => this.resume())
 
     // Periodic flush to backend
-    this.batchTimer = window.setInterval(() => this.flush(), BATCH_INTERVAL_MS)
+    this.batchTimer = window.setInterval(() => void this.flush(), BATCH_INTERVAL_MS)
 
     // Periodic live attention update
     this.updateTimer = window.setInterval(() => this.updateLiveAttention(), UPDATE_INTERVAL_MS)
 
     // Flush on page unload
-    window.addEventListener('beforeunload', () => this.flush())
+    window.addEventListener('beforeunload', () => void this.flush())
   }
 
   /**
@@ -141,7 +141,12 @@ export class ViewportTracker {
     }
   }
 
-  /** Update --attention on all currently-visible blocks, handle unseen→seen transitions. */
+  /**
+   * Update --attention on all currently-visible blocks, handle unseen→seen
+   * transitions. Rolls totalMs forward for seen blocks so live accumulation
+   * is observable to anything that reads attention from IndexedDB (e.g. the
+   * doc-list panel) after a flush.
+   */
   private updateLiveAttention(): void {
     if (!this.active) return
     const now = Date.now()
@@ -165,8 +170,13 @@ export class ViewportTracker {
         continue
       }
 
-      const total = block.totalMs + elapsed
-      const attention = Math.min(1, total / WARM_THRESHOLD_MS)
+      // Roll totalMs forward and reset the baseline. closeInterval will
+      // only credit time since this tick, so no double-counting.
+      block.totalMs += elapsed
+      block.visibleSince = now
+      block.dirty = true
+
+      const attention = Math.min(1, block.totalMs / WARM_THRESHOLD_MS)
       block.element.style.setProperty('--attention', attention.toFixed(3))
     }
   }
@@ -246,8 +256,8 @@ export class ViewportTracker {
     }
   }
 
-  private flush(): void {
-    // Persist to IndexedDB
+  /** Persist dirty attention to IndexedDB and sync pending events. */
+  async flush(): Promise<void> {
     const dirtyBlocks = this.blocks.filter(b => b.dirty)
     if (dirtyBlocks.length > 0) {
       const records: AttentionRecord[] = dirtyBlocks.map(b => ({
@@ -257,11 +267,10 @@ export class ViewportTracker {
         visits: b.visits,
         lastVisible: b.lastVisible || undefined,
       }))
-      putAttentionBatch(records).catch(() => {})
       for (const b of dirtyBlocks) b.dirty = false
+      try { await putAttentionBatch(records) } catch {}
     }
 
-    // Sync to backend (if live)
     if (this.pendingEvents.length === 0) return
     const batch = this.pendingEvents.splice(0)
     this.client.sendViewportEvents(batch)
@@ -276,6 +285,6 @@ export class ViewportTracker {
     for (const block of this.blocks) {
       this.closeInterval(block, now)
     }
-    this.flush()
+    void this.flush()
   }
 }
