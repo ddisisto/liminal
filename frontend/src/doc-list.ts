@@ -53,6 +53,8 @@ export class DocList {
   /** Optional pre-refresh hook: called (and awaited) before each panel refresh. */
   private refreshHook: (() => Promise<void> | void) | null = null
   private currentDocId: string | null = null
+  /** Doc id whose active row should flash on its next render — consumed once. */
+  private flashDocId: string | null = null
   /** Folder keys currently collapsed. Default: everything expanded. */
   private collapsed = new Set<string>()
   /** Monotonic token: stale refreshes drop their DOM mutation. */
@@ -84,6 +86,14 @@ export class DocList {
       if (this.panel.contains(e.target as Node)) return
       this.close()
     })
+
+    // Clean up the glimpse class when its slide animation completes.
+    // Filter by animationName + target so the row flash doesn't trigger it.
+    this.panel.addEventListener('animationend', (e) => {
+      if (e.target !== this.panel) return
+      if (e.animationName !== 'doc-list-glimpse-slide') return
+      this.panel.classList.remove('doc-list-panel--glimpse')
+    })
   }
 
   private applyMode(): void {
@@ -108,10 +118,26 @@ export class DocList {
 
   /** Set the currently active document (for highlighting + stats refresh). */
   setCurrentDoc(docId: string): void {
+    const changed = docId !== this.currentDocId
+    // Arm the arrival-flash whenever the doc changes. Consumed by the next
+    // render that builds the active row.
+    if (changed) this.flashDocId = docId
     this.currentDocId = docId
-    // Refresh to pick up latest attention/position across the tree.
-    // Fire-and-forget — the list updates when IndexedDB reads complete.
-    if (this.open) void this.refresh()
+    if (this.open) {
+      // Fire-and-forget — the list updates when IndexedDB reads complete.
+      void this.refresh()
+    } else if (changed && !this.wide.matches) {
+      // Narrow mode with panel closed: glimpse the nav so the reader sees
+      // where the just-navigated doc sits in the graph, distinguishing a
+      // navigation from a jump-to-top (which also returns to the hero).
+      void this.flashGlimpse()
+    }
+  }
+
+  /** Briefly slide the panel in, render (triggering the row flash), slide out. */
+  private async flashGlimpse(): Promise<void> {
+    this.panel.classList.add('doc-list-panel--glimpse')
+    await this.refresh()
   }
 
   /** Rebuild the tree from the bundle + IndexedDB stats. */
@@ -241,6 +267,15 @@ export class DocList {
     row.className = 'doc-list-row doc-list-row--leaf'
     if (leaf.path === this.currentDocId) row.classList.add('doc-list-row--active')
     if (leaf.greyed) row.classList.add('doc-list-row--greyed')
+    if (leaf.path === this.flashDocId) {
+      row.classList.add('doc-list-row--flash')
+      this.flashDocId = null
+      row.addEventListener(
+        'animationend',
+        () => row.classList.remove('doc-list-row--flash'),
+        { once: true },
+      )
+    }
     row.dataset.docId = leaf.path
     row.style.setProperty('--depth', String(depth))
 

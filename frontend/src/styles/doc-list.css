@@ -49,6 +49,28 @@
   display: flex;
 }
 
+/* Glimpse: transient slide-in on navigate when the panel is closed.
+   Class is added by setCurrentDoc and removed on animationend. Motion-gated
+   so reduced-motion users don't see a surprise panel. */
+@media (prefers-reduced-motion: no-preference) {
+  .doc-list-panel--glimpse {
+    display: flex;
+    animation: doc-list-glimpse-slide 900ms ease-in-out;
+  }
+
+  @keyframes doc-list-glimpse-slide {
+    0%   { transform: translateX(-100%); }
+    18%  { transform: translateX(0); }
+    78%  { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* Delay the row flash so it lands after the slide-in, not during it. */
+  .doc-list-panel--glimpse .doc-list-row--flash {
+    animation-delay: 160ms;
+  }
+}
+
 /* Wide viewports: reserve left space so #container and the fixed
    input area recentre within the remaining viewport. --doc-list-offset
    is consumed by body padding and by #input-area's `left`. */
@@ -98,6 +120,20 @@ body.doc-list-shifted {
 
 .doc-list-row--active {
   background: color-mix(in oklch, var(--border), var(--attn-warm) 20%);
+}
+
+/* Arrival cue: brief bg pulse on the just-activated row, restarting on each
+   navigation. Static --active background resumes after the animation ends. */
+@media (prefers-reduced-motion: no-preference) {
+  .doc-list-row--flash {
+    animation: doc-list-row-arrival 400ms ease-out;
+  }
+
+  @keyframes doc-list-row-arrival {
+    0%   { background: color-mix(in oklch, var(--border), var(--attn-warm) 20%); }
+    30%  { background: color-mix(in oklch, var(--border), var(--attn-warm) 70%); }
+    100% { background: color-mix(in oklch, var(--border), var(--attn-warm) 20%); }
+  }
 }
 
 .doc-list-row--greyed {
